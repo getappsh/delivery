@@ -1,25 +1,24 @@
 import { Module } from '@nestjs/common';
+import { S3Service } from '@app/common/AWS/s3.service';
+import { DeliveryEntity } from '@app/common/database/entities/delivery.entity';
 import { HttpModule } from '@nestjs/axios';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
-import { TngDatabaseModule } from '@app/common/database-tng/tng-database.module';
-import { CacheModule } from '../cache/cache.module';
+import { DownloadService } from './download.service';
 import { HttpClientService } from './http-client.service';
-import { HttpConfigModule } from '@app/common/http-config/http-config.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DeliveryEntity } from '@app/common/database-tng/entities';
+import { TngDatabaseModule } from '@app/common/database-tng/tng-database.module';
+import { HttpConfigService } from '@app/common/utils/http-config.service';
 
 @Module({
   imports: [
     TngDatabaseModule,
     HttpModule,
-    HttpConfigModule,
-    CacheModule,
     TypeOrmModule.forFeature([
-      DeliveryEntity,
-    ]),
+      DeliveryEntity
+    ])
   ],
   controllers: [DeliveryController],
-  providers: [DeliveryService, HttpClientService],
+  providers: [DeliveryService, S3Service, HttpClientService, DownloadService, HttpConfigService],
 })
-export class TngModule { }
+export class TngModule {}
