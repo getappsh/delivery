@@ -1,11 +1,13 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DeliveryStatusEntity, ItemTypeEnum, DeviceEntity, DiscoveryMessageEntity, MapEntity, MapImportStatusEnum, PackageStatus, UploadStatus, UploadVersionEntity, VersionPackagesEntity, DeviceMapStateEntity, DeviceMapStateEnum, PrepareStatusEnum } from '@app/common/database/entities';
-import { ArtifactoryService } from '@app/common/artifactory';
-import { createWriteStream, existsSync, mkdirSync } from "fs"
-import { PackageMessageDto, DeliveryStatusDto, PrepareDeliveryReqDto, PrepareDeliveryResDto } from '@app/common/dto/delivery';
+import { MapEntity, MapImportStatusEnum, UploadStatus, UploadVersionEntity, VersionPackagesEntity, PrepareStatusEnum, HashAlgorithmEnum, ItemTypeEnum } from '@app/common/database/entities';
+import { PrepareDeliveryResDto } from '@app/common/dto/delivery';
 import { S3Service } from '@app/common/AWS/s3.service';
+import { DeliveryItemDto } from '@app/common/dto/delivery/dto/delivery-item.dto';
+import { HttpClientService } from './http-client.service';
+import { DeliveryError } from '@app/common/dto/delivery/dto/delivery-error';
+import { ErrorCode, ErrorDto } from '@app/common/dto/error';
 
 @Injectable()
 export class DeliveryService {
@@ -15,122 +17,104 @@ export class DeliveryService {
   constructor(
     // private readonly artifactory: ArtifactoryService,
     private s3Service: S3Service,
+    private httpService: HttpClientService,
     @InjectRepository(UploadVersionEntity) private readonly uploadVersionRepo: Repository<UploadVersionEntity>,
-    @InjectRepository(DeliveryStatusEntity) private readonly deliveryStatusRepo: Repository<DeliveryStatusEntity>,
-    @InjectRepository(DeviceEntity) private readonly deviceRepo: Repository<DeviceEntity>,
     @InjectRepository(MapEntity) private readonly mapRepo: Repository<MapEntity>,
-    @InjectRepository(DeviceMapStateEntity) private readonly deviceMapRepo: Repository<DeviceMapStateEntity>,
   ) { }
 
-  async updateDownloadStatus(dlvStatus: DeliveryStatusDto) {
-    const newStatus = this.deliveryStatusRepo.create(dlvStatus);
 
-    let device = await this.deviceRepo.findOne({ where: { ID: dlvStatus.deviceId } })
-    if (!device) {
-      const newDevice = this.deviceRepo.create()
-      newDevice.ID = dlvStatus.deviceId
-      device = await this.deviceRepo.save(newDevice)
-      this.logger.log(`A new device with Id - ${device.ID} has been registered`)
-    }
-    newStatus.device = device;
-
-    const component = await this.uploadVersionRepo.findOneBy({ catalogId: dlvStatus.catalogId });
-    if (component) {
-      return await this.upsertDownloadStatus(newStatus)
-    }
-
-    const map = await this.mapRepo.findOneBy({ catalogId: dlvStatus.catalogId })
-    if (map) {
-      const isSaved = await this.upsertDownloadStatus(newStatus)
-
-      if (isSaved){
-        this.logger.log(`Save state of map ${map.catalogId} for device ${device.ID}`)
-        let deviceMap = this.deviceMapRepo.create({ device, map, state: DeviceMapStateEnum.DELIVERY })
-
-        this.deviceMapRepo.upsert(deviceMap, ['device', 'map'])
-      }
-      return isSaved
-    }
-    throw new BadRequestException(`Not found Item with this catalogId: ${dlvStatus.catalogId}`);
-  }
-
-  private async upsertDownloadStatus(newStatus: DeliveryStatusEntity): Promise<Boolean> {
-    let savedMap: any = await this.deliveryStatusRepo.createQueryBuilder()
-        .insert()
-        .values({...newStatus})
-        .orIgnore()
-        .execute()
-
-      if (savedMap?.raw?.length == 0){
-        savedMap = await this.deliveryStatusRepo.createQueryBuilder()
-          .update()
-          .set({...newStatus})
-          .where("deviceID = :deviceID", {deviceID: newStatus.device.ID})
-          .andWhere("catalogId = :catalogId", {catalogId: newStatus.catalogId})
-          .andWhere("current_time < :current_time", {current_time: newStatus.currentTime})
-          .execute()
-      }
-      
-      return savedMap?.raw?.length > 0 || savedMap.affected > 0
-  }
-
-  async prepareDelivery(prepDlv: PrepareDeliveryReqDto): Promise<PrepareDeliveryResDto> {
-    let prepRes = new PrepareDeliveryResDto()
-    prepRes.catalogId = prepDlv.catalogId;
-    const comp = await this.uploadVersionRepo.findOneBy({ catalogId: prepDlv.catalogId });
-    if (comp && comp.uploadStatus == UploadStatus.READY) {
-      prepRes.status = PrepareStatusEnum.DONE;
-      prepRes.url = await this.s3Service.generatePresignedUrlForDownload(comp.s3Url);
-      return prepRes;
-    }
-    const map = await this.mapRepo.findOneBy({ catalogId: prepDlv.catalogId });
-
-    if (map) {
-      if (map.status == MapImportStatusEnum.DONE) {
-        prepRes.status = PrepareStatusEnum.DONE;
-        prepRes.url = map.packageUrl;
-      } else if (map.status == MapImportStatusEnum.IN_PROGRESS || map.status == MapImportStatusEnum.START) {
-        prepRes.status = PrepareStatusEnum.IN_PROGRESS;
-      } else {
-        prepRes.status = PrepareStatusEnum.ERROR;
-      }
-      return prepRes
-    }
-    this.logger.error(`Cannot find an Item with catalogId: ${prepDlv.catalogId}`);
-
-    prepRes.status = PrepareStatusEnum.ERROR;
-    return prepRes
-  }
-
-  async getPrepareDeliveryStatus(catalogId: string): Promise<PrepareDeliveryResDto> {
+  async prepareDelivery(catalogId: string): Promise<PrepareDeliveryResDto> {
     let prepRes = new PrepareDeliveryResDto()
     prepRes.catalogId = catalogId;
+    try {
+      const comp = await this.uploadVersionRepo.findOneBy({ catalogId });
+      if (comp) {
+        if (comp.uploadStatus == UploadStatus.READY) {
+          return await this.getCompPrepDlvRes(comp, prepRes)
+        } else {
+          const msg = `Catalog Id '${catalogId}' package, not yet available for delivery`
+          this.logger.warn(msg)
+          throw new DeliveryError(ErrorCode.DLV_DOWNLOAD_NOT_AVAILABLE, msg)
+        }
+      }
 
-    const comp = await this.uploadVersionRepo.findOneBy({ catalogId: catalogId });
-    if (comp && comp.uploadStatus == UploadStatus.READY) {
-      prepRes.status = PrepareStatusEnum.DONE;
-      prepRes.url = await this.s3Service.generatePresignedUrlForDownload(comp.s3Url);
-      return prepRes;
-    }
+      const map = await this.mapRepo.findOneBy({ catalogId });
+      if (map) {
+        if (map.status == MapImportStatusEnum.DONE) {
+          return await this.getMapPrepDlvRes(map, prepRes)
+        } else {
+          const msg = `Catalog Id '${catalogId}' package, not yet available for delivery`
+          this.logger.warn(msg)
+          throw new DeliveryError(ErrorCode.DLV_DOWNLOAD_NOT_AVAILABLE, msg)
+        }
+      }
 
-    const map = await this.mapRepo.findOneBy({ catalogId: catalogId });
-    if (map) {
-      if (map.status == MapImportStatusEnum.DONE) {
-        prepRes.status = PrepareStatusEnum.DONE;
-        prepRes.url = map.packageUrl;
-      } else if (map.status == MapImportStatusEnum.IN_PROGRESS || map.status == MapImportStatusEnum.START) {
-        prepRes.status = PrepareStatusEnum.IN_PROGRESS;
+      const msg = `Item not found, catalog Id: ${catalogId}`
+      throw new DeliveryError(ErrorCode.DLV_NOT_FOUND, msg)
+    } catch (error) {
+
+      prepRes.status = PrepareStatusEnum.ERROR;
+      prepRes.error = new ErrorDto()
+      prepRes.error.message = error.message
+      if (error instanceof DeliveryError) {
+        this.logger.error(error);
+        prepRes.error.errorCode = error.errorCode
       } else {
-        prepRes.status = PrepareStatusEnum.ERROR;
+        this.logger.error(`Error getting prepared delivery status : ${catalogId}`, error);
+        prepRes.error.errorCode = ErrorCode.DLV_OTHER
       }
       return prepRes
     }
 
-    this.logger.error(`Error getting prepared delivery status : ${catalogId}`);
+  }
 
-    prepRes.status = PrepareStatusEnum.ERROR;
+  async getMapPrepDlvRes(map: MapEntity, prepRes: PrepareDeliveryResDto): Promise<PrepareDeliveryResDto> {
+    prepRes.status = PrepareStatusEnum.DONE;
+    prepRes.url = map.packageUrl;
+    let jsonArtifacts = new DeliveryItemDto()
+    jsonArtifacts.catalogId = prepRes.catalogId;
+    jsonArtifacts.itemKey = "json"
+    jsonArtifacts.url = this.changeExtensionToJson(map.packageUrl);
+    jsonArtifacts.metaData = ItemTypeEnum.MAP.toString()
+
+
+    let mapJson = await this.httpService.getMapJson(jsonArtifacts.url);
+
+    let geoArtifacts = new DeliveryItemDto()
+    geoArtifacts.catalogId = prepRes.catalogId;
+    geoArtifacts.itemKey = "gpkg"
+    geoArtifacts.url = map.packageUrl;
+    geoArtifacts.metaData = ItemTypeEnum.MAP.toString()
+    if (mapJson.sha256) {
+      geoArtifacts.hash = {
+        algorithm: HashAlgorithmEnum.SHA256Hex,
+        hash: mapJson.sha256
+      }
+    }
+
+    prepRes.Artifacts = [geoArtifacts, jsonArtifacts];
+
     return prepRes
+  }
 
+  async getCompPrepDlvRes(comp: UploadVersionEntity, prepRes: PrepareDeliveryResDto): Promise<PrepareDeliveryResDto> {
+    const url = await this.s3Service.generatePresignedUrlForDownload(comp.s3Url)
+    prepRes.status = PrepareStatusEnum.DONE;
+    prepRes.url = url;
+    let compArtifacts = new DeliveryItemDto()
+    compArtifacts.catalogId = prepRes.catalogId;
+    compArtifacts.itemKey = comp.s3Url.substring(comp.s3Url.lastIndexOf(".") + 1)
+    compArtifacts.url = url
+    compArtifacts.size = comp.virtualSize
+    compArtifacts.metaData = ItemTypeEnum.SOFTWARE
+
+    prepRes.Artifacts = [compArtifacts];
+
+    return prepRes
+  }
+
+  private changeExtensionToJson(s: string): string {
+    return s.substring(0, s.lastIndexOf(".")) + ".json"
   }
 
 

@@ -1,6 +1,5 @@
 import { MapEntity } from "@app/common/database/entities";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, Max, Min } from "class-validator";
 import { MapProductResDto } from "./map-product-res.dto";
 
 export class MapDto {
@@ -58,7 +57,7 @@ export class MapDto {
     map.fileName = mapEntity.fileName;
     map.packageUrl = mapEntity.packageUrl;
     map.isUpdate = mapEntity.isUpdated
-    map.product = mapEntity.mapProduct
+    map.product = MapProductResDto.fromProductEntity(mapEntity.mapProduct)
 
     return map
   }

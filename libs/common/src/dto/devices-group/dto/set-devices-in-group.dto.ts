@@ -1,23 +1,25 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsNumber, IsString } from "class-validator";
+import { IsArray, IsNumber, IsOptional, IsString } from "class-validator";
 
-export class SetDevicesInGroupDto {
-  @ApiProperty({required: true})
+export class SetChildInGroupDto {
+  @ApiProperty({ required: true })
   @IsNumber()
   id: number
   
   @ApiProperty({required: false})
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   devices: string[];
-
-
+  
+  
   @ApiProperty({required: false})
+  @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  groups: string[];
+  @IsNumber({ allowNaN: false }, { each: true })
+  groups: number[];
 
-  toString(){
+  toString() {
     return JSON.stringify(this);
   }
 

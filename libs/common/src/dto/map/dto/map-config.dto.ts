@@ -1,7 +1,9 @@
-import { MapConfigEntity, TargetStoragePolicy } from "@app/common/database/entities";
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
-
+import { AndroidConfigDto, TargetStoragePolicy } from "../../device/dto/device-config.dto";
+/**
+  * @deprecated This field is deprecated and will be removed in the future.
+  */
 export class MapConfigDto {
 
   @ApiProperty({ required: false })
@@ -109,7 +111,17 @@ export class MapConfigDto {
   @IsOptional()
   lastConfigUpdateDate: Date
 
-  static fromMapConfig(cE: MapConfigEntity) {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  ortophotoMapPath: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  controlMapPath: string
+
+  static fromDeviceConfigDto(cE: AndroidConfigDto) {
     const config = new MapConfigDto()
     config.deliveryTimeoutMins = cE.deliveryTimeoutMins
     config.downloadRetryTime = cE.downloadRetryTime
@@ -125,12 +137,14 @@ export class MapConfigDto {
     config.matomoUrl = cE.matomoUrl
     config.matomoDimensionId = cE.matomoDimensionId
     config.matomoSiteId = cE.matomoSiteId
-    config.lastConfigUpdateDate = cE.lastUpdatedDate
+    config.lastConfigUpdateDate = cE.lastConfigUpdateDate
     config.sdStoragePath = cE.sdStoragePath
     config.flashStoragePath = cE.flashStoragePath
     config.targetStoragePolicy = cE.targetStoragePolicy
     config.flashInventoryMaxSizeMB = cE.flashInventoryMaxSizeMB
     config.sdInventoryMaxSizeMB = cE.sdInventoryMaxSizeMB
+    config.ortophotoMapPath = cE.ortophotoMapPath
+    config.controlMapPath = cE.controlMapPath
 
     return config
   }

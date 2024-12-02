@@ -1,12 +1,14 @@
-import { Body, Controller, Get, Logger, NotFoundException, Param, Post } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { DeliveryService } from './delivery.service';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
-import { PrepareDeliveryResDto, PrepareDeliveryReqDto } from '@app/common/dto/delivery';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { ApiTags } from '@nestjs/swagger';
+import { PrepareDeliveryReqDto } from '@app/common/dto/delivery';
+import { MessagePattern} from '@nestjs/microservices';
 import { DeliveryTopics } from '@app/common/microservice-client/topics';
+import { PrepareService } from '../cache/prepare.service';
+import { DeliveryEntity } from '@app/common/database-tng/entities';
+import { RpcPayload } from '@app/common/microservice-client';
 
 @ApiTags("Delivery")
-// @ApiBearerAuth()
 @Controller('delivery')
 export class DeliveryController {
 
@@ -14,17 +16,23 @@ export class DeliveryController {
 
   constructor(
     private readonly deliveryService: DeliveryService,
+    private readonly prepareService: PrepareService,
   ) { }
 
   @MessagePattern(DeliveryTopics.PREPARE_DELIVERY)
-  prepareDelivery(preDlv: PrepareDeliveryReqDto) {
-    this.logger.debug(`Prepare delivery for catalogId: ${preDlv.catalogId}`)
-    return this.deliveryService.prepareDelivery(preDlv);
+  prepareDelivery(@RpcPayload() preDlv: PrepareDeliveryReqDto) {
+    this.logger.log(`Prepare delivery for catalogId: ${preDlv.catalogId}`)
+    return this.prepareService.prepareDelivery(preDlv, async (dlv: DeliveryEntity) => await this.deliveryService.getDeliveryResources(dlv));
   }
 
   @MessagePattern(DeliveryTopics.PREPARED_DELIVERY_STATUS)
-  getPrepareDeliveryStatus(@Payload("stringValue") catalogId: string) {
+  getPrepareDeliveryStatus(@RpcPayload("stringValue") catalogId: string) {
     this.logger.log(`Get prepared delivery status for catalogId: ${catalogId}`);
-    return this.deliveryService.getPreparedDeliveryStatus(catalogId);
+    return this.prepareService.getPreparedDeliveryStatus(catalogId, async (dlv: DeliveryEntity) => await this.deliveryService.getDeliveryResources(dlv));
+  }
+
+  @MessagePattern(DeliveryTopics.CHECK_HEALTH)
+  healthCheckSuccess() {
+    return "Delivery service is success"
   }
 }

@@ -1,13 +1,14 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
-import { DeliveryEntity, UploadVersionEntity, DevicesGroupEntity, ProjectEntity, MemberProjectEntity, MemberEntity, VersionPackagesEntity, DiscoveryMessageEntity, DeployStatusEntity, PlatformEntity, FormationEntity, CategoryEntity, OperationSystemEntity, DeviceEntity, DeliveryStatusEntity, MapEntity, DeviceMapStateEntity, ProductEntity, MapConfigEntity, BugReportEntity } from '../entities';
+import { UploadVersionEntity, OrgGroupEntity, ProjectEntity, MemberProjectEntity, MemberEntity, VersionPackagesEntity, DiscoveryMessageEntity, DeployStatusEntity, PlatformEntity, FormationEntity, CategoryEntity, OperationSystemEntity, DeviceEntity, DeliveryStatusEntity, MapEntity, DeviceMapStateEntity, ProductEntity, BugReportEntity, OrgUIDEntity, DeviceComponentEntity, ComponentOfferingEntity, DeviceConfigEntity, MapOfferingEntity } from '../entities';
 import { join } from 'path';
 import { readFileSync } from 'fs'
 import { JobsEntity } from '../entities/map-updatesCronJob';
+import { DeliveryEntity, DeliveryItemEntity, CacheConfigEntity } from '../../database-tng/entities';
 
 const region = process.env.REGION ? `_${process.env.REGION}` : '';
 let migrationsRun: boolean = true
-if (process.env.MIGRATION_RUN){
+if (process.env.MIGRATION_RUN) {
   migrationsRun = process.env.MIGRATION_RUN === 'true'
 }
 
@@ -18,7 +19,7 @@ const ormConfig = new DataSource({
   database: `${process.env.POSTGRES_DB}${region}`,
   username: process.env.POSTGRES_USER,
   connectTimeoutMS: 5000,
-  
+
 
   ...getDBAuthParams(),
   entities: [
@@ -35,14 +36,20 @@ const ormConfig = new DataSource({
     CategoryEntity,
     OperationSystemEntity,
     DeviceEntity,
-    DevicesGroupEntity,
+    OrgGroupEntity,
+    OrgUIDEntity,
     MapEntity,
     ProductEntity,
     DeviceMapStateEntity,
     DeliveryEntity,
-    MapConfigEntity,
+    DeliveryItemEntity,
+    CacheConfigEntity,
     JobsEntity,
-    BugReportEntity
+    BugReportEntity,
+    DeviceConfigEntity,
+    DeviceComponentEntity,
+    ComponentOfferingEntity,
+    MapOfferingEntity,
   ],
   migrations: [join(__dirname, '../migration/*.{js,ts}')],
   logging: false,
@@ -57,6 +64,7 @@ function getDBAuthParams() {
     case "TNG":
       return {
         ssl: {
+          ca: [readFileSync(process.env.DB_PEM_PATH)],
           key: [readFileSync(process.env.DB_KEY_PATH)],
           cert: [readFileSync(process.env.DB_CERT_PATH)]
         }

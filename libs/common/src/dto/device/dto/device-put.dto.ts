@@ -1,6 +1,6 @@
 import { DeviceEntity } from "@app/common/database/entities";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsOptional, IsString } from "class-validator";
+import { IsNumber, IsOptional, IsString } from "class-validator";
 
 export class DevicePutDto {
 
@@ -10,6 +10,11 @@ export class DevicePutDto {
   @IsOptional()
   @IsString()
   name: string
+  
+  @ApiProperty({ required: false, description: "Set the unique given id or null to remove the exists uid." })
+  @IsOptional()
+  @IsNumber()
+  orgUID: number | null
 
   toString() {
     return JSON.stringify(this);
@@ -19,6 +24,10 @@ export class DevicePutDto {
     const device = new DevicePutDto()
     device.deviceId = dE.ID
     device.name = dE.name
+
+    if(dE.orgUID && dE.orgUID.UID){
+      device.orgUID = dE.orgUID.UID
+    }
 
     return device
   }

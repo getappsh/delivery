@@ -23,13 +23,13 @@ export class ProductEntity {
   productName: string;
 
   @Column({name: 'product_version', nullable: true})
-  productVersion: string;
+  productVersion: number;
 
   @Column({name: 'product_type', nullable: true})
   productType: string;
 
   @Column({name: 'product_sub_type', nullable: true})
-  productSubType: string;
+  productSubType: number;
 
   @Column({name: 'description', nullable: true})
   description: string;

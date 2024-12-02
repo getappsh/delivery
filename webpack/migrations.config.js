@@ -6,15 +6,16 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
 const { NODE_ENV = 'production' } = process.env;
+const DB = process.env.DB || 'database';
 
-console.log(`-- Webpack <${NODE_ENV}> build for migrations scripts --`);
+console.log(`-- Webpack <${NODE_ENV}> <${DB}> build for migrations scripts --`);
 
 module.exports = {
   target: 'node',
   mode: NODE_ENV,
   // Dynamically generate a `{ [name]: sourceFileName }` map for the `entry` option
   // change `src/db/migrations` to the relative path to your migration folder
-  entry: glob.sync(path.resolve('libs/common/src/database/migration/*.ts')).reduce((entries, filename) => {
+  entry: glob.sync(path.resolve(`libs/common/src/${DB}/migration/*.ts`)).reduce((entries, filename) => {
     const migrationName = path.basename(filename, '.ts');
     return Object.assign({}, entries, {
       [migrationName]: filename,

@@ -12,7 +12,7 @@ export class UpdateUploadStatusDto{
    
     @IsEnum(UploadStatus)
     @ApiProperty({enum: UploadStatus})
-    status: string
+    status: UploadStatus
 
     @IsString()
     @IsNotEmpty()

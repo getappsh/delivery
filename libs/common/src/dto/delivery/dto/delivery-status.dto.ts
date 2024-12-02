@@ -6,61 +6,70 @@ import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validato
 export class DeliveryStatusDto {
 
 
-  @ApiProperty({required: false})
+  @ApiProperty()
   @IsNotEmpty()
   deviceId: string;
 
-  @ApiProperty({required: false})
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   catalogId: string;
 
-  
-  @ApiProperty({required: false})  
-  @IsOptional()    
+  /**
+   * @description This property might be required in the future.
+   * @future -required
+   */
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  // @IsNotEmpty() // Uncomment this in the future when this field becomes mandatory
+  itemKey: string = 'gpkg';
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   @Type(() => Date)
   @IsDate()
   downloadStop: Date;
 
-  @ApiProperty({required: false})
-  @IsOptional()    
+  @ApiProperty({ required: false })
+  @IsOptional()
   @Type(() => Date)
   @IsDate()
   downloadStart: Date;
 
-  @ApiProperty({required: false})
-  @IsOptional()    
+  @ApiProperty({ required: false })
+  @IsOptional()
   @Type(() => Date)
   @IsDate()
   downloadDone: Date;
 
-  @ApiProperty({required: false})
-  @IsOptional()    
+  @ApiProperty({ required: false })
+  @IsOptional()
   bitNumber: number;
 
-  @ApiProperty({required: false})
-  @IsOptional()    
+  @ApiProperty({ required: false })
+  @IsOptional()
   downloadSpeed: number;
 
-  @ApiProperty({required: false})
-  @IsOptional()    
+  @ApiProperty({ required: false })
+  @IsOptional()
   downloadData: number;
-  
-  @ApiProperty({required: false})
+
+  @ApiProperty({ required: false, type: "integer", format: "int64" })
   @IsOptional()
   downloadEstimateTime: number;
 
-  @ApiProperty({required: false})
-  @IsOptional()    
+  @ApiProperty()
+  @IsOptional()
   @Type(() => Date)
   @IsDate()
   currentTime: Date;
 
-  @ApiProperty({enum: DeliveryStatusEnum})
+  @ApiProperty({ enum: DeliveryStatusEnum })
   @IsEnum(DeliveryStatusEnum)
   deliveryStatus: DeliveryStatusEnum
 
-  @ApiProperty({enum: ItemTypeEnum})
+  @ApiProperty({ enum: ItemTypeEnum })
   @IsEnum(ItemTypeEnum)
   type: ItemTypeEnum
 

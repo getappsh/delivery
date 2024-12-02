@@ -6,8 +6,9 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const IgnoreDynamicRequire = require('webpack-ignore-dynamic-require');
 
 const { NODE_ENV = 'production' } = process.env;
+const DB = process.env.DB || 'database';
 
-console.log(`-- Webpack <${NODE_ENV}> build for TypeORM CLI --`);
+console.log(`-- Webpack <${NODE_ENV}> <${DB}> build for TypeORM CLI --`);
 
 const BASE_CONFIG = {
   target: 'node',
@@ -35,7 +36,7 @@ const TYPEORM_CONFIG = {
       // in TypeORM code. Instead, export this data source as a library.
       // BUT, TypeORM expect it to be at the top level instead of a module variable, so
       // we MUST remove the library name to make webpack export each variable from data source into the module
-      import: './libs/common/src/database/config/ormconfig.ts',
+      import: `./libs/common/src/${DB}/config/ormconfig.ts`,
       library: {
         type: 'commonjs2'
       }

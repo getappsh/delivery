@@ -1,8 +1,9 @@
-import { Entity, Column, Unique, ManyToOne, ManyToMany, BeforeInsert, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from "typeorm";
+import { Entity, Column, Unique, ManyToOne, ManyToMany, BeforeInsert, CreateDateColumn, UpdateDateColumn, PrimaryColumn, OneToMany } from "typeorm";
 import { UploadStatus } from "./enums.entity";
 import { ProjectEntity } from "./project.entity";
-import {v4 as uuidv4} from 'uuid'
+import { nanoid } from "nanoid";
 import { DeviceEntity } from "./device.entity";
+import { DeviceComponentEntity } from "./device-component-state.entity";
 
 @Entity('upload_version')
 @Unique('platform_component_formation_version_unique_constraint', ['platform', 'component', 'formation', 'version'])
@@ -13,7 +14,7 @@ export class UploadVersionEntity{
   
     @BeforeInsert()
     generateUUID() {
-      this.catalogId = uuidv4();
+      this.catalogId = nanoid();
     }
 
     // TODO make sure no one use this column and delete it;
@@ -73,11 +74,14 @@ export class UploadVersionEntity{
     @Column({name: "policy_status", nullable: true})
     policyStatus: string
 
+    @Column({name: "latest", default: false})
+    latest: boolean
+
     @ManyToOne(() => ProjectEntity)
     project: ProjectEntity
 
-    @ManyToMany(() => DeviceEntity, deviceEntity => deviceEntity.components)
-    devices: DeviceEntity[]
+    @OneToMany(() => DeviceComponentEntity, deviceCompEntity => deviceCompEntity.component, { cascade: true })
+    devices: DeviceComponentEntity[]
 
     static fromArtifact({platform, component, formation, OS, version, project, size=0, ...metadata}){
         const newVersion = new UploadVersionEntity()

@@ -12,9 +12,9 @@ WORKDIR /node-app
 ARG uid=1004370000
 ARG username=getapp
 # Add the user to /etc/passwd
-RUN echo "${username}:x:${uid}:${uid}:${username}:/home/${username}:/sbin/nologin" >> /etc/passwd
+RUN echo "${username}:x:${uid}:${uid}:${username}:/home/${username}:/sbin/nologin" >>/etc/passwd
 # Add the user to /etc/group
-RUN echo "${username}:x:${uid}:" 
+RUN echo "${username}:x:${uid}:"
 
 # ===   install ca sofeware === #
 # Install the ca-certificates package to manage certificates
@@ -37,7 +37,6 @@ RUN chown -R ${uid}:${uid} /node-app
 # # RUN chown -R ${uid}:${uid} /node-app
 ENV CI=true
 
-
 ############################################################
 ###               ///       end      ///                 ###
 ############################################################
@@ -51,13 +50,18 @@ WORKDIR /node-app
 COPY package*.json ./
 RUN npm i
 COPY . .
+
 # test stage
 # RUN npm run test
-# build
-RUN npm run build
 
+# build
+ARG DB
+#ARG DB=database-tng
+RUN npm run build --db=$DB
 
 FROM cts as deploy
+ARG delivery_version_tag
+ENV delivery_version_tag=$delivery_version_tag
 
 ENV NODE_ENV=production
 
@@ -69,6 +73,9 @@ COPY --chown=${uid}:${uid} package*.json ./
 RUN npm install --only=production --omit=dev
 
 COPY --chown=${uid}:${uid} --from=build /node-app/dist/ .
+
+RUN echo "$delivery_version_tag" > NEW_TAG.txt 
+
 
 # a file that contains the image version
 # COPY docker_image_version.txt /docker_image_version.txt

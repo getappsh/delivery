@@ -25,7 +25,8 @@ export const situationalDiscoveryDtoStub = (): SituationalDiscoveryDto => {
     time: new Date("2023-04-23T12:07:57.994Z"),
     operativeState: true,
     power: 38,
-    location: geoLocationDtoStub()
+    location: geoLocationDtoStub(),
+    availableStorage: "50mb"
   }
 }
 

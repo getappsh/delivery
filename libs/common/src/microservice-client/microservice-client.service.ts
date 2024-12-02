@@ -12,7 +12,8 @@ import { ClsService } from "nestjs-cls";
 @Injectable()
 export class MicroserviceClient {
   private readonly logger = new Logger(MicroserviceClient.name);
-  private client: ClientProxy | ClientKafka
+  private client: ClientProxy | ClientKafka;
+  private payloadVersion: string;
 
   constructor(
     private readonly options: MicroserviceModuleOptions,
@@ -23,6 +24,7 @@ export class MicroserviceClient {
       const clientConfig = getClientConfig(options, dplEnv)
 
       this.client = ClientProxyFactory.create(clientConfig)
+      this.payloadVersion = configService.get<string>('RPC_PAYLOAD_VERSION')
     }
 
   
@@ -62,15 +64,35 @@ export class MicroserviceClient {
     )
   }
 
-  private formatData(data: any){
-    if (typeof data === 'string'){
-      data = {stringValue: data}
+  private formatData(data: any) {
+    return this.payloadVersion === "2" 
+      ? this.formatDataV2(data) 
+      : this.formatDataV1(data);
+  }
+
+
+  private formatDataV1(data: any) {
+    const headers = { traceId: this.cls.getId() || "" };
+    
+    if (typeof data === 'string') {
+      data = { stringValue: data };
     }
-    let hData = {headers: {"traceId": this.cls.getId()}, ...data}
-    if (this.isKafka()){
-      hData = JSON.stringify(hData)
-    }
-    return hData
+  
+    return this.isKafka()
+      ? { headers, value: JSON.stringify(data) }
+      : { headers, ...data }; // WARNING messages of list ar not working, use V2
+  }
+
+  
+  private formatDataV2(data: any) {
+    const headers = { traceId: this.cls.getId() || "" };
+    
+    return {
+      headers,
+      value: typeof data !== 'string' && this.isKafka() 
+        ? JSON.stringify(data) 
+        : data
+    };
   }
 
   isKafka(){

@@ -13,8 +13,10 @@ export const componentDtoStub = (): ComponentDto => {
   category: "category",
   baseVersion: eStub.baseVersion,
   prevVersion: eStub.prevVersion,
-  subComponents: []
-  }
+  subComponents: [],
+  latest: true,
+  uploadDate: new Date(),
+  } as ComponentDto
 }
 
 export const platformDtoStub = (): PlatformDto => {
