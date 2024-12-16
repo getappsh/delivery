@@ -98,12 +98,12 @@ export class DeliveryService {
   }
 
   async getCompPrepDlvRes(comp: UploadVersionEntity, prepRes: PrepareDeliveryResDto): Promise<PrepareDeliveryResDto> {
-    const url = await this.s3Service.generatePresignedUrlForDownload(comp.s3Url)
+    const url = await this.s3Service.generatePresignedUrlForDownload(comp.url)
     prepRes.status = PrepareStatusEnum.DONE;
     prepRes.url = url;
     let compArtifacts = new DeliveryItemDto()
     compArtifacts.catalogId = prepRes.catalogId;
-    compArtifacts.itemKey = comp.s3Url.substring(comp.s3Url.lastIndexOf(".") + 1)
+    compArtifacts.itemKey = comp.url.substring(comp.url.lastIndexOf(".") + 1)
     compArtifacts.url = url
     compArtifacts.size = comp.virtualSize
     compArtifacts.metaData = ItemTypeEnum.SOFTWARE
