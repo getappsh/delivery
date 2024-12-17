@@ -1,12 +1,11 @@
-import { DeliveryTopics, DeliveryTopicsEmit, UploadTopics } from '@app/common/microservice-client/topics';
+import { DeliveryTopics } from '@app/common/microservice-client/topics';
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, EventPattern } from '@nestjs/microservices';
 import { DeliveryService } from './delivery.service';
-import { DeliveryStatusDto, PrepareDeliveryReqDto } from '@app/common/dto/delivery';
+import { PrepareDeliveryReqDto } from '@app/common/dto/delivery';
 import { ConfigService } from '@nestjs/config';
 import { PrepareService } from '../cache/prepare.service';
 import { DeliveryEntity } from '@app/common/database-tng/entities';
-import { ItemTypeEnum } from '@app/common/database/entities';
 import { RpcPayload } from '@app/common/microservice-client';
 
 @Controller()

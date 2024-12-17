@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MapEntity, MapImportStatusEnum, UploadStatus, UploadVersionEntity, VersionPackagesEntity, PrepareStatusEnum, HashAlgorithmEnum, ItemTypeEnum } from '@app/common/database/entities';
+import { MapEntity, MapImportStatusEnum, UploadStatus, UploadVersionEntity, VersionPackagesEntity, PrepareStatusEnum, HashAlgorithmEnum, ItemTypeEnum, AssetTypeEnum } from '@app/common/database/entities';
 import { PrepareDeliveryResDto } from '@app/common/dto/delivery';
 import { S3Service } from '@app/common/AWS/s3.service';
 import { DeliveryItemDto } from '@app/common/dto/delivery/dto/delivery-item.dto';
@@ -98,15 +98,23 @@ export class DeliveryService {
   }
 
   async getCompPrepDlvRes(comp: UploadVersionEntity, prepRes: PrepareDeliveryResDto): Promise<PrepareDeliveryResDto> {
-    const url = await this.s3Service.generatePresignedUrlForDownload(comp.url)
     prepRes.status = PrepareStatusEnum.DONE;
-    prepRes.url = url;
     let compArtifacts = new DeliveryItemDto()
     compArtifacts.catalogId = prepRes.catalogId;
     compArtifacts.itemKey = comp.url.substring(comp.url.lastIndexOf(".") + 1)
-    compArtifacts.url = url
     compArtifacts.size = comp.virtualSize
-    compArtifacts.metaData = ItemTypeEnum.SOFTWARE
+
+    let url
+    if (comp.assetType == AssetTypeEnum.DOCKER_IMAGE){
+      compArtifacts.metaData = AssetTypeEnum.DOCKER_IMAGE;
+      url = comp.url
+    }else{
+      compArtifacts.metaData = ItemTypeEnum.SOFTWARE
+      url = await this.s3Service.generatePresignedUrlForDownload(comp.url)
+    }
+    prepRes.url = url;
+    compArtifacts.url = url
+
 
     prepRes.Artifacts = [compArtifacts];
 
