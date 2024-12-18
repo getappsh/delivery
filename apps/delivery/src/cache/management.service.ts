@@ -221,13 +221,13 @@ export class ManagementService implements OnApplicationBootstrap {
       });
 
       // Fetch S3 bucket contents and prepare lists for missing and verified items
-      const s3List = await this.S3Service.getBucketObjList();
+      const s3List = (await this.S3Service.getBucketObjList()).Contents.filter(i => i.Key.startsWith("cache"));      
       const missingInDatabase: string[] = [];
       const verifiedObjects: { [key: string]: _Object } = {};
       const invalidItemsInDB: DeliveryItemEntity[] = [];
 
       // Check each object in S3 against the database records    
-      s3List.Contents?.forEach((s3Object) => {
+      s3List?.forEach((s3Object) => {
         if (!deliveryItems[s3Object.Key] || deliveryItems[s3Object.Key].status == PrepareStatusEnum.DELETE) {
           missingInDatabase.push(s3Object.Key);
         } else {
