@@ -30,9 +30,4 @@ export class DeliveryController {
     this.logger.log(`Get prepared delivery status for catalogId: ${catalogId}`);
     return this.prepareService.getPreparedDeliveryStatus(catalogId, async (dlv: DeliveryEntity) => await this.deliveryService.getDeliveryResources(dlv));
   }
-
-  @MessagePattern(DeliveryTopics.CHECK_HEALTH)
-  healthCheckSuccess() {
-    return "Delivery service is success"
-  }
 }
