@@ -226,7 +226,7 @@ export class PrepareService {
   }
 
   async prepareItemToDownload(dlv: DeliveryEntity, art: DeliveryItemDto, dlvSig: any): Promise<void> {    
-    let path = `${art.metaData}/${dlv.catalogId}${art.url.substring(art.url.lastIndexOf("/"), art.url.includes("?") ? art.url.indexOf("?") : art.url.length)}`;
+    let path = `cache/${art.metaData}/${dlv.catalogId}${art.url.substring(art.url.lastIndexOf("/"), art.url.includes("?") ? art.url.indexOf("?") : art.url.length)}`;
     let dlvItem = await this.deliveryItemRepo.findOne({ where: { delivery: { catalogId: dlv.catalogId }, itemKey: art.itemKey } })
 
     if (!dlvItem) {
