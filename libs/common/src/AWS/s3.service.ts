@@ -40,11 +40,11 @@ export class S3Service implements OnApplicationBootstrap {
       await this.s3.headBucket({ Bucket: this.bucketName });
       this.logger.debug(`Bucket "${this.bucketName}" already exists.`);
     } catch (error) {
-      if (error["$metadata"].httpStatusCode === 404) {
+      if (error["$metadata"]?.httpStatusCode === 404) {
         await this.s3.createBucket({ Bucket: this.bucketName });
         this.logger.log(`Bucket "${this.bucketName}" created successfully.`);
       } else {        
-        this.logger.error(`Failed to check/create bucket - error code: ${error["$metadata"].httpStatusCode}, mes: ${error.message}`);
+        this.logger.error(`Failed to check/create bucket - error code: ${error["$metadata"]?.httpStatusCode}, mes: ${error.message}`);
       }
     }
   }
