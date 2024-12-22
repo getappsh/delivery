@@ -11,21 +11,28 @@ import { DeliveryItemDto, HashDto } from '@app/common/dto/delivery/dto/delivery-
 import { ManagementService } from './management.service';
 import { ErrorCode, ErrorDto } from '@app/common/dto/error';
 import { DeliveryError } from '@app/common/dto/delivery/dto/delivery-error';
+import { ConfigService } from '@nestjs/config';
 
 const UPDATE_INTERVAL_MLS = 5000;
 
 @Injectable()
 export class PrepareService {
   private readonly logger = new Logger(PrepareService.name);
+  private readonly HARBOR_CACHE_REGISTRY_URL;
 
   constructor(
+    private configService: ConfigService,
     private mngService: ManagementService,
     private downloadService: DownloadService,
     private httpService: HttpClientService,
     private readonly s3Service: S3Service,
     @InjectRepository(DeliveryEntity) private readonly deliveryRepo: Repository<DeliveryEntity>,
     @InjectRepository(DeliveryItemEntity) private readonly deliveryItemRepo: Repository<DeliveryItemEntity>,
-  ) { }
+  ) { 
+
+    this.HARBOR_CACHE_REGISTRY_URL = this.configService.get<string>('HARBOR_CACHE_REGISTRY_URL');
+    this.logger.log(`HARBOR_CACHE_REGISTRY_URL: ${this.HARBOR_CACHE_REGISTRY_URL}`);
+  }
 
 
   async prepareDelivery(prepDlv: PrepareDeliveryReqDto, dlvSrcFn: (dlv: DeliveryEntity) => Promise<PrepareDeliveryResDto>): Promise<PrepareDeliveryResDto> {
@@ -127,7 +134,11 @@ export class PrepareService {
     res.progress = 100;
     res.Artifacts = await Promise.all((await this.getDeliveryItems(dlv)).map(async (item, i) => {
       const resDto = DeliveryItemDto.fromDeliveryItemEntity(item)
-      resDto.url = await this.s3Service.generatePresignedUrlForDownload(item.path)
+      if (item.metaData === 'docker_image') {
+        resDto.url = item.path
+      }else {
+        resDto.url = await this.s3Service.generatePresignedUrlForDownload(item.path)
+      }
       if (i === 0 || item.itemKey === 'gpkg') {
         res.url = resDto.url
       }
@@ -226,7 +237,6 @@ export class PrepareService {
   }
 
   async prepareItemToDownload(dlv: DeliveryEntity, art: DeliveryItemDto, dlvSig: any): Promise<void> {    
-    let path = `cache/${art.metaData}/${dlv.catalogId}${art.url.substring(art.url.lastIndexOf("/"), art.url.includes("?") ? art.url.indexOf("?") : art.url.length)}`;
     let dlvItem = await this.deliveryItemRepo.findOne({ where: { delivery: { catalogId: dlv.catalogId }, itemKey: art.itemKey } })
 
     if (!dlvItem) {
@@ -236,14 +246,30 @@ export class PrepareService {
       dlvItem.metaData = art.metaData
     }
 
-    dlvItem.path = path
-    dlvItem.status = PrepareStatusEnum.START
-    dlvItem.errMsg = null
-    dlvItem.progress = 0
-    dlvItem.size = null
-    dlvItem.hash = art.hash?.hash
-    dlvItem.hashAlgorithm = art.hash?.algorithm
-    dlvItem = await this.deliveryItemRepo.save(dlvItem)
+    let path;
+    if (art.metaData == 'docker_image'){
+      const registry_url = this.HARBOR_CACHE_REGISTRY_URL
+      path = `${registry_url}/${art.url.substring(art.url.indexOf('/') + 1)}`;
+      dlvItem.path = path
+      dlvItem.status = PrepareStatusEnum.DONE
+      dlvItem.errMsg = null
+      dlvItem.progress = 100
+      dlvItem.size = null
+      dlvItem.hash = art.hash?.hash
+      dlvItem.hashAlgorithm = art.hash?.algorithm
+      dlvItem = await this.deliveryItemRepo.save(dlvItem)
+      return
+    }else {
+      path = `cache/${art.metaData}/${dlv.catalogId}${art.url.substring(art.url.lastIndexOf("/"), art.url.includes("?") ? art.url.indexOf("?") : art.url.length)}`;
+      dlvItem.path = path
+      dlvItem.status = PrepareStatusEnum.START
+      dlvItem.errMsg = null
+      dlvItem.progress = 0
+      dlvItem.size = null
+      dlvItem.hash = art.hash?.hash
+      dlvItem.hashAlgorithm = art.hash?.algorithm
+      dlvItem = await this.deliveryItemRepo.save(dlvItem)
+    }
 
     let dlvStatus = new DeliveryStatusDto()
     dlvStatus.catalogId = dlv.catalogId
