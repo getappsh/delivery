@@ -132,6 +132,7 @@ export class ManagementService implements OnApplicationBootstrap {
       await Promise.all(dlvs.map(async dlv => {
         this.logger.debug(`Delete delivery entity ${dlv.catalogId}`)
         await Promise.all(dlv.items.map(async item => {
+          // TODO - handel when the file is a docker image
           await this.S3Service.deleteFile(item.path)
           await this.dlvItemRepo.update({ id: item.id }, { status: PrepareStatusEnum.DELETE })
 
@@ -217,7 +218,12 @@ export class ManagementService implements OnApplicationBootstrap {
         },
         relations: { delivery: true },
       })).forEach((item: DeliveryItemEntity) => {
-        deliveryItems[item.path] = item;
+        if (item.metaData == "docker_image"){
+            // TODO - when item is docker images sync with the docker registry
+            return
+        }else {
+          deliveryItems[item.path] = item;
+        }
       });
 
       // Fetch S3 bucket contents and prepare lists for missing and verified items
