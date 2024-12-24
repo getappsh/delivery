@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MapEntity, MapImportStatusEnum, UploadStatus, UploadVersionEntity, VersionPackagesEntity, PrepareStatusEnum, HashAlgorithmEnum, ItemTypeEnum, AssetTypeEnum } from '@app/common/database/entities';
+import { MapEntity, MapImportStatusEnum, UploadStatus, UploadVersionEntity, PrepareStatusEnum, HashAlgorithmEnum, ItemTypeEnum, AssetTypeEnum } from '@app/common/database/entities';
 import { PrepareDeliveryResDto } from '@app/common/dto/delivery';
 import { S3Service } from '@app/common/AWS/s3.service';
 import { DeliveryItemDto } from '@app/common/dto/delivery/dto/delivery-item.dto';
@@ -12,7 +12,6 @@ import { ErrorCode, ErrorDto } from '@app/common/dto/error';
 @Injectable()
 export class DeliveryService {
   private readonly logger = new Logger(DeliveryService.name);
-  packageInPreparation: VersionPackagesEntity | null;
 
   constructor(
     // private readonly artifactory: ArtifactoryService,

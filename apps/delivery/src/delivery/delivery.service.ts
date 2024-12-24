@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DeliveryStatusEntity, DeviceEntity, MapEntity, UploadVersionEntity, VersionPackagesEntity, DeviceMapStateEntity, DeviceMapStateEnum, DeviceComponentStateEnum, DeliveryStatusEnum } from '@app/common/database/entities';
+import { DeliveryStatusEntity, DeviceEntity, MapEntity, UploadVersionEntity, DeviceMapStateEntity, DeviceMapStateEnum, DeviceComponentStateEnum, DeliveryStatusEnum } from '@app/common/database/entities';
 import { DeliveryStatusDto } from '@app/common/dto/delivery';
 import { CacheConfigDto } from '@app/common/dto/delivery/dto/cache-config.dto';
 import { ManagementService } from '../cache/management.service';
@@ -15,7 +15,6 @@ import { DeviceMapStateDto } from '@app/common/dto/device';
 export class DeliveryService {
 
   private readonly logger = new Logger(DeliveryService.name);
-  packageInPreparation: VersionPackagesEntity | null;
 
   constructor(
     private readonly cacheMngService: ManagementService,
