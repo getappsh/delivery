@@ -60,8 +60,6 @@ ARG DB
 RUN npm run build --db=$DB
 
 FROM cts as deploy
-ARG delivery_version_tag
-ENV delivery_version_tag=$delivery_version_tag
 
 ENV NODE_ENV=production
 
@@ -76,10 +74,12 @@ COPY --chown=${uid}:${uid} --from=build /node-app/dist/ .
 
 RUN echo "$delivery_version_tag" > NEW_TAG.txt 
 
-
 # a file that contains the image version
-# COPY docker_image_version.txt /docker_image_version.txt
-# RUN cat docker_image_version.txt
+ARG delivery_version_tag
+ENV delivery_version_tag=$delivery_version_tag
+RUN echo "$delivery_version_tag" > delivery_image_version.txt
+RUN cat delivery_image_version.txt
+
 
 USER ${username}
 CMD ["node", "apps/delivery/main.js"]
