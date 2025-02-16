@@ -31,7 +31,7 @@ export class DeliveryController {
         return await this.deliveryService.prepareDelivery(dlv.catalogId)
       });
     }
-    const res = await this.deliveryService.prepareDelivery(preDlv.catalogId);
+    const res = await this.deliveryService.prepareDeliveryV2(preDlv.catalogId);
     return res;
 
   }
