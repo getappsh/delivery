@@ -163,6 +163,7 @@ export class DeliveryService {
       
       let compArtifacts = new DeliveryItemDto()
       compArtifacts.catalogId = prepRes.catalogId;
+      compArtifacts.id = art.id
 
       // compArtifacts.metaData = JSON.stringify(art.metadata);
 
