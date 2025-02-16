@@ -47,6 +47,7 @@ export const DeliveryTopicsEmit = {
 export const OfferingTopics = {
     CHECK_UPDATES: `getapp-offering.check-updates${region}`,
     DEVICE_COMPONENT_OFFERING: `getapp-offering.device-components${region}`,
+    DEVICE_COMPONENT_OFFERING_V2: `getapp-offering.device-components-v2${region}`,
     DEVICE_MAP_OFFERING: `getapp-offering.device-map${region}`,
     GET_OFFER_OF_COMP: `getapp-offering.get-offering-of-comp${region}`,
     CHECK_HEALTH: `getapp-offering.check-health${region}`
@@ -54,6 +55,7 @@ export const OfferingTopics = {
 
 export const OfferingTopicsEmit = {
     COMPONENT_UPLOAD_EVENT: `getapp-offering.component-upload-event${region}`,
+    RELEASE_CHANGED_EVENT: `getapp-offering.release-changed-event${region}`,
     OFFERING_PUSH: `getapp-offering.push${region}`,
     DEVICE_SOFTWARE_EVENT: `getapp-offering.device.software-event${region}`,
     DEVICE_MAP_EVENT: `getapp-offering.device.map-event${region}`,
@@ -167,6 +169,7 @@ export const DeviceTopics = {
 
 export const DeviceTopicsEmit = {
     DISCOVER_DEVICE_CONTEXT: `getapp-device.discover.device-context${region}`,
+    DISCOVER_DEVICE_CONTEXT_V2: `getapp-device.discover.device-context-V2${region}`,
     UPDATE_DEVICE_SOFTWARE_STATE: `getapp-device.device.update-software-state${region}`,
     UPDATE_DEVICE_MAP_STATE: `getapp-device.device.update-map-state${region}`,
     REGISTER_MAP_TO_DEVICE: `getapp-device.map.register-to-device${region}`,
@@ -174,7 +177,7 @@ export const DeviceTopicsEmit = {
     MAP_UPDATES_JOB_START: `getapp-device.map.job.updates.start${region}`,
     UPDATE_TLS_STATUS: `getapp-device.update.tls.status${region}`,
     IM_PUSH_DISCOVERY: `getapp-device.im.push.discovery${region}`,
-    COMPONENT_EVENT: `getapp-device.component.event`,
+    RELEASE_CHANGED_EVENT: `getapp-device.release-changed-event${region}`,
 } as const
 
 

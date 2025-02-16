@@ -3,17 +3,13 @@ import { ProjectEntity } from './project.entity';
 import { ReleaseArtifactEntity } from './release-artifact.entity';
 import { ReleaseStatusEnum } from './enums.entity';
 import { nanoid } from "nanoid";
+import { DeviceComponentEntity } from './device-component-state.entity';
 
 @Entity('release')
 @Index(['project', 'version'], { unique: true })
 export class ReleaseEntity {
   @PrimaryColumn({ name: 'catalog_id' })
   catalogId: string;
-
-  @BeforeInsert()
-  generateUUID() {
-    this.catalogId = nanoid();
-  }
 
   @Column({ name: 'version' })
   version: string;
@@ -66,4 +62,7 @@ export class ReleaseEntity {
   @ManyToMany(() => ReleaseEntity, (release) => release.dependencies)
   dependentReleases: ReleaseEntity[];
 
+
+  @OneToMany(() => DeviceComponentEntity, deviceCompEntity => deviceCompEntity.release)
+  devices: DeviceComponentEntity[]
 }

@@ -1,15 +1,16 @@
-import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsDate, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { DeviceDto } from "./device.dto";
 import { ApiProperty } from "@nestjs/swagger";
-import { ComponentDto } from "../../discovery";
-import { DeviceComponentEntity, DeviceComponentStateEnum, DeviceEntity, DiscoveryMessageEntity } from "@app/common/database/entities";
+import { ComponentStateDto } from "../../discovery";
+import { DeviceComponentEntity, DeviceComponentStateEnum } from "@app/common/database/entities";
 import { Type } from "class-transformer";
+import { ComponentV2Dto } from "../../upload";
 
 
 export class SoftwareStateDto {
   
-  @ApiProperty({ type: ComponentDto})
-  software: ComponentDto;
+  @ApiProperty({ type: ComponentV2Dto})
+  software: ComponentV2Dto;
 
   @ApiProperty({ required: false, enum: DeviceComponentStateEnum })
   state: DeviceComponentStateEnum;
@@ -28,14 +29,18 @@ export class SoftwareStateDto {
   @IsDate()
   deployDate: Date;
 
-  @ApiProperty({ isArray: true, type: ComponentDto })
-  offering: ComponentDto[];
+  @ApiProperty({ isArray: true, type: ComponentV2Dto })
+  offering: ComponentV2Dto[];
+
+  @ApiProperty({ required: false})
+  error: string;
 
   static fromDeviceComponentEntity(componentState: DeviceComponentEntity) {
 
     let softwareState = new SoftwareStateDto();
-    softwareState.software = ComponentDto.fromUploadVersionEntity(componentState.component);
+    softwareState.software = ComponentV2Dto.fromEntity(componentState.release);
     softwareState.state = componentState.state;
+    softwareState.error = componentState?.error;
 
     return softwareState;
   }
@@ -58,9 +63,9 @@ export class DeviceSoftwareDto extends DeviceDto {
 
     let offering = deviceComponents.filter(c => c.state == DeviceComponentStateEnum.OFFERING)
     for (let dto of deviceSoftware.softwares){
-      let offer = offering.filter(off => off.component.component == dto.software.name)
+      let offer = offering.filter(off => off?.release?.project?.name == dto?.software?.projectName)
       if (offer){
-        dto.offering = offer.map(off => ComponentDto.fromUploadVersionEntity(off.component));
+        dto.offering = offer.map(off => ComponentV2Dto.fromEntity(off.release));
       }
 
     }
@@ -72,21 +77,20 @@ export class DeviceSoftwareDto extends DeviceDto {
   }
 }
 
-export class DeviceSoftwareStateDto{
+export class DeviceComponentStateDto extends ComponentStateDto{
   
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
   deviceId: string;
 
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  catalogId: string;
 
-  @ApiProperty({enum: DeviceComponentStateEnum })
-  @IsEnum(DeviceComponentStateEnum)
-  state: DeviceComponentStateEnum;
+  static fromParent(parent: ComponentStateDto, deviceId: string){
+    let dto = new DeviceComponentStateDto();
+    Object.assign(dto, parent);
+    dto.deviceId = deviceId
+    return dto
+  }
 
   toString(){
     return JSON.stringify(this);
