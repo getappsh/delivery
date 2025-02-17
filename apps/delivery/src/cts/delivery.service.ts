@@ -36,7 +36,7 @@ export class DeliveryService {
     try {
       const release = await this.releaseRepo.findOne({
         where: { catalogId },
-        relations: { artifacts: {fileUpload: true}} 
+        relations: { artifacts: {fileUpload: true}, dependencies: {artifacts: {fileUpload: true}} }, 
       });
 
       if (release) {
@@ -154,36 +154,45 @@ export class DeliveryService {
     return prepRes
   }
 
-  async getCompPrepDlvResV2(release: ReleaseEntity, prepRes: PrepareDeliveryResDto): Promise<PrepareDeliveryResDto> {
-    prepRes.status = PrepareStatusEnum.DONE;
-
+  private async getArtifactsFromRelease(release: ReleaseEntity, dlvCatalogId: string): Promise<DeliveryItemDto[]> {
     const artifacts = []
     for (const art of release.artifacts) {
       if (!art.isInstallationFile) continue;
       
       let compArtifacts = new DeliveryItemDto()
-      compArtifacts.catalogId = prepRes.catalogId;
+      compArtifacts.catalogId = dlvCatalogId;
       compArtifacts.id = art.id
-
-      // compArtifacts.metaData = JSON.stringify(art.metadata);
-
+      compArtifacts.metaData = JSON.stringify(art.metadata)
+      
       if(art.type === ArtifactTypeEnum.DOCKER_IMAGE){
-        compArtifacts.metaData = AssetTypeEnum.DOCKER_IMAGE;
+        compArtifacts.artifactType = AssetTypeEnum.DOCKER_IMAGE;
         compArtifacts.url = art.dockerImageUrl
 
         // TODO set item-key
       }else {
-        compArtifacts.metaData = ItemTypeEnum.SOFTWARE
+        compArtifacts.artifactType = ItemTypeEnum.SOFTWARE
         compArtifacts.size = art.fileUpload?.size;
         compArtifacts.url = await this.minioClient.generatePresignedDownloadUrl(this.bucketName, art.fileUpload.objectKey);
         
         // Maybe change this to file type
-        compArtifacts.itemKey = `${prepRes.catalogId}@${art.fileUpload.fileName}`;
+        compArtifacts.itemKey = `${release.catalogId}@${art.fileUpload.fileName}`;
 
       }
       artifacts.push(compArtifacts)      
     }
 
+    return artifacts
+  }
+
+  async getCompPrepDlvResV2(release: ReleaseEntity, prepRes: PrepareDeliveryResDto): Promise<PrepareDeliveryResDto> {
+    prepRes.status = PrepareStatusEnum.DONE;
+
+    const artifacts = await this.getArtifactsFromRelease(release, prepRes.catalogId);
+    for (let dep of release.dependencies){
+      const arts = await this.getArtifactsFromRelease(dep, prepRes.catalogId)
+      artifacts.push(...arts)
+    }
+    
     prepRes.Artifacts = artifacts
 
     return prepRes
