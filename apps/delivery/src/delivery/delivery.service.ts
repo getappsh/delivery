@@ -1,14 +1,14 @@
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DeliveryStatusEntity, DeviceEntity, MapEntity, UploadVersionEntity, DeviceMapStateEntity, DeviceMapStateEnum, DeviceComponentStateEnum, DeliveryStatusEnum } from '@app/common/database/entities';
+import { DeliveryStatusEntity, DeviceEntity, MapEntity, DeviceMapStateEnum, DeviceComponentStateEnum, DeliveryStatusEnum, ReleaseEntity } from '@app/common/database/entities';
 import { DeliveryStatusDto } from '@app/common/dto/delivery';
 import { CacheConfigDto } from '@app/common/dto/delivery/dto/cache-config.dto';
 import { ManagementService } from '../cache/management.service';
 import { DeleteFromCacheDto } from '@app/common/dto/delivery/dto/delete-cache.dto';
 import { MicroserviceClient, MicroserviceName } from '@app/common/microservice-client';
-import { DeviceTopics, DeviceTopicsEmit } from '@app/common/microservice-client/topics';
-import { DeviceSoftwareStateDto } from '@app/common/dto/device/dto/device-software.dto';
+import { DeviceTopicsEmit } from '@app/common/microservice-client/topics';
+import { DeviceComponentStateDto } from '@app/common/dto/device/dto/device-software.dto';
 import { DeviceMapStateDto } from '@app/common/dto/device';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class DeliveryService {
 
   constructor(
     private readonly cacheMngService: ManagementService,
-    @InjectRepository(UploadVersionEntity) private readonly uploadVersionRepo: Repository<UploadVersionEntity>,
+    @InjectRepository(ReleaseEntity) private readonly releaseRepo: Repository<ReleaseEntity>,
     @InjectRepository(DeliveryStatusEntity) private readonly deliveryStatusRepo: Repository<DeliveryStatusEntity>,
     @InjectRepository(DeviceEntity) private readonly deviceRepo: Repository<DeviceEntity>,
     @InjectRepository(MapEntity) private readonly mapRepo: Repository<MapEntity>,
@@ -37,21 +37,26 @@ export class DeliveryService {
     }
     newStatus.device = device;
 
-    const component = await this.uploadVersionRepo.findOneBy({ catalogId: dlvStatus.catalogId });
-    if (component) {
+    const release = await this.releaseRepo.findOneBy({ catalogId: dlvStatus.catalogId });
+    if (release) {
       const isSaved =  await this.upsertDownloadStatus(newStatus);
+      this.logger.debug(`Is saved: ${isSaved}`);
       if (isSaved){
         this.logger.log("Send device software state");
-        let state;
-        if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DELETED){
-          state = DeviceComponentStateEnum.DELETED;
-        }else {
-          state = DeviceComponentStateEnum.DELIVERY;
-        }
-        let deviceState = new DeviceSoftwareStateDto();
-        deviceState.state = state;
+
+        let deviceState = new DeviceComponentStateDto();
         deviceState.catalogId = dlvStatus.catalogId;
         deviceState.deviceId = dlvStatus.deviceId;
+        if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DELETED){
+          deviceState.state = DeviceComponentStateEnum.DELETED;
+        }else if(dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR){
+          deviceState.state = DeviceComponentStateEnum.DELIVERY;
+          deviceState.error = "Error"
+        }else {
+          deviceState.state = DeviceComponentStateEnum.DELIVERY;
+        }
+        
+       
         this.deviceClient.emit(DeviceTopicsEmit.UPDATE_DEVICE_SOFTWARE_STATE, deviceState);
       }
       return isSaved;

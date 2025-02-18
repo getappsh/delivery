@@ -8,7 +8,7 @@ import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
 import { DatabaseModule } from '@app/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UploadVersionEntity, DeliveryStatusEntity, DeviceEntity, MapEntity, DeviceMapStateEntity } from '@app/common/database/entities';
+import { UploadVersionEntity, DeliveryStatusEntity, DeviceEntity, MapEntity, DeviceMapStateEntity, ReleaseEntity } from '@app/common/database/entities';
 import { CacheModule } from '../cache/cache.module';
 import { MicroserviceModule, MicroserviceName, MicroserviceType } from '@app/common/microservice-client';
 
@@ -23,7 +23,7 @@ import { MicroserviceModule, MicroserviceName, MicroserviceType } from '@app/com
     }),
     DatabaseModule,
     TypeOrmModule.forFeature([
-      UploadVersionEntity,
+      ReleaseEntity,
       DeliveryStatusEntity,
       DeviceEntity,
       MapEntity
