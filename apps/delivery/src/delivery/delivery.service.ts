@@ -27,6 +27,7 @@ export class DeliveryService {
 
   async updateDownloadStatus(dlvStatus: DeliveryStatusDto) {
     const newStatus = this.deliveryStatusRepo.create(dlvStatus);
+    newStatus.progress = dlvStatus.downloadData
 
     let device = await this.deviceRepo.findOne({ where: { ID: dlvStatus.deviceId } })
     if (!device) {
