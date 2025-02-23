@@ -24,7 +24,6 @@ export class DeliveryService {
     private readonly minioClient: MinioClientService,
     private s3Service: S3Service,
     private httpService: HttpClientService,
-    @InjectRepository(UploadVersionEntity) private readonly uploadVersionRepo: Repository<UploadVersionEntity>,
     @InjectRepository(MapEntity) private readonly mapRepo: Repository<MapEntity>,
     @InjectRepository(ReleaseEntity) private readonly releaseRepo: Repository<ReleaseEntity>,
   ) { }
@@ -42,52 +41,6 @@ export class DeliveryService {
       if (release) {
         if (release.status == ReleaseStatusEnum.RELEASED) {
           return await this.getCompPrepDlvResV2(release, prepRes)
-        } else {
-          const msg = `Catalog Id '${catalogId}' package, not yet available for delivery`
-          this.logger.warn(msg)
-          throw new DeliveryError(ErrorCode.DLV_DOWNLOAD_NOT_AVAILABLE, msg)
-        }
-      }
-
-      const map = await this.mapRepo.findOneBy({ catalogId });
-      if (map) {
-        if (map.status == MapImportStatusEnum.DONE) {
-          return await this.getMapPrepDlvRes(map, prepRes)
-        } else {
-          const msg = `Catalog Id '${catalogId}' package, not yet available for delivery`
-          this.logger.warn(msg)
-          throw new DeliveryError(ErrorCode.DLV_DOWNLOAD_NOT_AVAILABLE, msg)
-        }
-      }
-
-      const msg = `Item not found, catalog Id: ${catalogId}`
-      throw new DeliveryError(ErrorCode.DLV_NOT_FOUND, msg)
-    } catch (error) {
-
-      prepRes.status = PrepareStatusEnum.ERROR;
-      prepRes.error = new ErrorDto()
-      prepRes.error.message = error.message
-      if (error instanceof DeliveryError) {
-        this.logger.error(error);
-        prepRes.error.errorCode = error.errorCode
-      } else {
-        this.logger.error(`Error getting prepared delivery status : ${catalogId}`, error);
-        prepRes.error.errorCode = ErrorCode.DLV_OTHER
-      }
-      return prepRes
-    }
-
-  }
-
-
-  async prepareDelivery(catalogId: string): Promise<PrepareDeliveryResDto> {
-    let prepRes = new PrepareDeliveryResDto()
-    prepRes.catalogId = catalogId;
-    try {
-      const comp = await this.uploadVersionRepo.findOneBy({ catalogId });
-      if (comp) {
-        if (comp.uploadStatus == UploadStatus.READY) {
-          return await this.getCompPrepDlvRes(comp, prepRes)
         } else {
           const msg = `Catalog Id '${catalogId}' package, not yet available for delivery`
           this.logger.warn(msg)
