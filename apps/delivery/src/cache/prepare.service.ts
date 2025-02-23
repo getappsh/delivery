@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DownloadService } from './download.service';
 import { DeliveryStatusDto, PrepareDeliveryReqDto, PrepareDeliveryResDto } from '@app/common/dto/delivery';
-import { PrepareStatusEnum } from '@app/common/database/entities';
+import { ArtifactTypeEnum, PrepareStatusEnum } from '@app/common/database/entities';
 import { DeliveryEntity, DeliveryItemEntity } from '@app/common/database-tng/entities';
 import { HttpClientService } from './http-client.service';
 import { DeliveryItemDto, HashDto } from '@app/common/dto/delivery/dto/delivery-item.dto';
@@ -134,7 +134,7 @@ export class PrepareService {
     res.progress = 100;
     res.Artifacts = await Promise.all((await this.getDeliveryItems(dlv)).map(async (item, i) => {
       const resDto = DeliveryItemDto.fromDeliveryItemEntity(item)
-      if (item.metaData === 'docker_image') {
+      if (item.artifactType === ArtifactTypeEnum.DOCKER_IMAGE) {
         resDto.url = item.path
       }else {
         resDto.url = await this.s3Service.generatePresignedUrlForDownload(item.path)
@@ -244,10 +244,11 @@ export class PrepareService {
       dlvItem.delivery = dlv
       dlvItem.itemKey = art.itemKey
       dlvItem.metaData = art.metaData
+      dlvItem.artifactType = art.artifactType
     }
 
     let path;
-    if (art.metaData == 'docker_image'){
+    if (art.artifactType == ArtifactTypeEnum.DOCKER_IMAGE){
       const registry_url = this.HARBOR_CACHE_REGISTRY_URL
       path = `${registry_url}/${art.url.substring(art.url.indexOf('/') + 1)}`;
       dlvItem.path = path
@@ -260,7 +261,7 @@ export class PrepareService {
       dlvItem = await this.deliveryItemRepo.save(dlvItem)
       return
     }else {
-      path = `cache/${art.metaData}/${dlv.catalogId}${art.url.substring(art.url.lastIndexOf("/"), art.url.includes("?") ? art.url.indexOf("?") : art.url.length)}`;
+      path = `cache/${dlv.catalogId}${art.url.substring(art.url.lastIndexOf("/"), art.url.includes("?") ? art.url.indexOf("?") : art.url.length)}`;
       dlvItem.path = path
       dlvItem.status = PrepareStatusEnum.START
       dlvItem.errMsg = null
