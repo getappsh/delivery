@@ -54,6 +54,20 @@ export class SetReleaseArtifactResDto {
   }
 }
 
+export class GetReleaseArtifactResDto {
+
+  @ApiProperty()
+  artifactId: number
+
+  @ApiProperty({ required: false, description: 'Only present for FILE artifact type' })
+  downloadUrl?: string;
+
+  toString(){
+    return JSON.stringify(this)
+  }
+
+}
+
 
 export class ReleaseArtifactDto {
 
@@ -81,6 +95,9 @@ export class ReleaseArtifactDto {
   @ApiProperty({type: 'enum', enum: FileUPloadStatusEnum, required: false})
   status?: FileUPloadStatusEnum
 
+  @ApiProperty({required: false, type: 'integer', format: 'int64'})
+  size?: number
+
 
   static fromEntity(artifact: ReleaseArtifactEntity): ReleaseArtifactDto {
     const dto = new ReleaseArtifactDto();
@@ -92,7 +109,8 @@ export class ReleaseArtifactDto {
     dto.dockerImageUrl = artifact?.dockerImageUrl;
     dto.uploadId = artifact.fileUpload ? artifact.fileUpload.id : null;
     dto.status = artifact?.fileUpload?.status
-
+    dto.size = artifact?.fileUpload?.size
+    
     return dto
   }
 
@@ -113,4 +131,18 @@ export class ReleaseArtifactParams extends ProjectIdentifierParams {
   @IsNumber()
   @Type(() => Number)
   artifactId: number
+}
+
+
+export class ReleaseArtifactNameParams extends ProjectIdentifierParams {
+  @ApiProperty()
+  @IsSemVer()
+  @Type(() => String)
+  version: string
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @Type(() => String)
+  fileName: string
 }

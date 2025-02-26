@@ -85,6 +85,12 @@ export class ReleaseDto {
   @ApiProperty({ description: 'Total number of compliant regulations' })
   compliantRegulationsCount: number;
 
+  @ApiProperty()
+  latest: boolean
+
+  @ApiProperty({required: false})
+  releasedAt?: Date
+
   static fromEntity(release: ReleaseEntity): ReleaseDto {
     const dto = new ReleaseDto();
     dto.version = release.version;
@@ -99,6 +105,9 @@ export class ReleaseDto {
     dto.updatedAt = release.updatedAt;
     dto.requiredRegulationsCount = release.requiredRegulationsCount;
     dto.compliantRegulationsCount = release.compliantRegulationsCount;
+    dto.latest = release.latest;
+    dto.releasedAt = release.releasedAt;
+
     return dto;
   }
 
@@ -161,6 +170,11 @@ export class ComponentV2Dto{
   @ApiProperty()
   updatedAt: Date;
 
+  @ApiProperty({required: false})
+  latest?: boolean
+
+  @ApiProperty({required: false})
+  releasedAt?: Date
 
   static fromEntity(release: ReleaseEntity): ComponentV2Dto {
     const dto = new ComponentV2Dto();
@@ -173,10 +187,12 @@ export class ComponentV2Dto{
     dto.updatedAt = release.updatedAt;
     dto.projectName = release.project.name;
     dto.type = release.project.projectType;
+    dto.latest = release.latest;
+    dto.releasedAt = release.releasedAt;
     dto.size = release?.artifacts
-    ?.filter(a => a.isInstallationFile)
-    ?.map(a => a?.fileUpload?.size)
-    ?.reduce((size, a) => size + a, 0);
+      ?.filter(a => a.isInstallationFile)
+      ?.map(a => a?.fileUpload?.size)
+      ?.reduce((size, a) => size + a, 0);
     return dto;
   }
   
