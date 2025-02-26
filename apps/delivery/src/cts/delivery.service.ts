@@ -120,8 +120,9 @@ export class DeliveryService {
       if(art.type === ArtifactTypeEnum.DOCKER_IMAGE){
         compArtifacts.artifactType = AssetTypeEnum.DOCKER_IMAGE;
         compArtifacts.url = art.dockerImageUrl
+        const imageName = art.dockerImageUrl.substring(art.dockerImageUrl.lastIndexOf("/") + 1);
+        compArtifacts.itemKey = `${release.catalogId}@${imageName}`;
 
-        // TODO set item-key
       }else {
         compArtifacts.artifactType = ItemTypeEnum.SOFTWARE
         compArtifacts.size = art.fileUpload?.size;
