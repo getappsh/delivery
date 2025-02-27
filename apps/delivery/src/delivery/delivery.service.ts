@@ -48,6 +48,8 @@ export class DeliveryService {
         let deviceState = new DeviceComponentStateDto();
         deviceState.catalogId = dlvStatus.catalogId;
         deviceState.deviceId = dlvStatus.deviceId;
+        deviceState.downloadedAt = dlvStatus.downloadDone ?? dlvStatus.downloadStart
+        
         if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DELETED){
           deviceState.state = DeviceComponentStateEnum.DELETED;
         }else if(dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR){
@@ -69,16 +71,21 @@ export class DeliveryService {
 
       if (isSaved) {
         this.logger.log("Send device map state");
-        let state;
-       if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DELETED){
-          state = DeviceMapStateEnum.DELETED;
-        }else {
-          state = DeviceMapStateEnum.DELIVERY;
-        }
+
         let deviceState = new DeviceMapStateDto();
-        deviceState.state = state;
         deviceState.catalogId = dlvStatus.catalogId;
         deviceState.deviceId = dlvStatus.deviceId;
+        deviceState.downloadedAt = dlvStatus.downloadDone ?? dlvStatus.downloadStart
+
+       if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DELETED){
+          deviceState.state  = DeviceMapStateEnum.DELETED;
+        }else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR){
+          deviceState.state  = DeviceMapStateEnum.DELIVERY;
+          deviceState.error = "Error"
+        } else {
+          deviceState.state  = DeviceMapStateEnum.DELIVERY;
+        }
+      
         this.deviceClient.emit(DeviceTopicsEmit.UPDATE_DEVICE_MAP_STATE, deviceState);
       }
       return isSaved
