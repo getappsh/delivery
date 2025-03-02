@@ -85,7 +85,7 @@ export class DeliveryService {
     jsonArtifacts.catalogId = prepRes.catalogId;
     jsonArtifacts.itemKey = "json"
     jsonArtifacts.url = this.changeExtensionToJson(map.packageUrl);
-    jsonArtifacts.metaData = ItemTypeEnum.MAP.toString()
+    jsonArtifacts.artifactType = ItemTypeEnum.MAP.toString()
 
 
     let mapJson = await this.httpService.getMapJson(jsonArtifacts.url);
@@ -94,7 +94,7 @@ export class DeliveryService {
     geoArtifacts.catalogId = prepRes.catalogId;
     geoArtifacts.itemKey = "gpkg"
     geoArtifacts.url = map.packageUrl;
-    geoArtifacts.metaData = ItemTypeEnum.MAP.toString()
+    geoArtifacts.artifactType = ItemTypeEnum.MAP.toString()
     if (mapJson.sha256) {
       geoArtifacts.hash = {
         algorithm: HashAlgorithmEnum.SHA256Hex,
