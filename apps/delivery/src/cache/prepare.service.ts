@@ -97,13 +97,26 @@ export class PrepareService {
 
 
   async getPreparedDeliveryStatus(catalogId: string, dlvSrcFn: (dlv: DeliveryEntity) => Promise<PrepareDeliveryResDto>): Promise<PrepareDeliveryResDto> {
+    const res = new PrepareDeliveryResDto()
 
     let dlv = await this.deliveryRepo.findOneBy({ catalogId: catalogId });
     if (!dlv) {
-      throw new NotFoundException(`No delivery with catalogId "${catalogId}" exist`);
+      this.logger.warn(`Not found delivery with catalogId: ${catalogId}, start again preparing delivery`);
+      res.catalogId = catalogId;
+      res.status = PrepareStatusEnum.START;
+
+      const prepDlv = new PrepareDeliveryReqDto()
+      prepDlv.catalogId = catalogId
+      prepDlv.deviceId = 'self prepare due not found dlv status'
+
+      dlv = DeliveryEntity.fromPrepDlvReqDto(prepDlv);
+      dlv.status = res.status;
+      this.deliveryRepo.save(dlv);
+
+      this.preparationForDownload(dlv, dlvSrcFn);
+      return res
     }
 
-    const res = new PrepareDeliveryResDto()
     res.catalogId = dlv.catalogId;
     res.status = dlv.status;
     if (dlv.status == PrepareStatusEnum.DONE) {
@@ -114,7 +127,7 @@ export class PrepareService {
       res.error.message = dlv.errMsg
     } else if (dlv.status === PrepareStatusEnum.DELETE) {
       res.status = PrepareStatusEnum.DELETE
-      if(dlv.errCode || dlv.errMsg){   
+      if (dlv.errCode || dlv.errMsg) {
         res.error = new ErrorDto()
         res.error.errorCode = ErrorDto.parseErrorCodeStrToEnum(dlv.errCode)
         res.error.message = dlv.errMsg
@@ -136,7 +149,7 @@ export class PrepareService {
       const resDto = DeliveryItemDto.fromDeliveryItemEntity(item)
       if (item.metaData === 'docker_image') {
         resDto.url = item.path
-      }else {
+      } else {
         resDto.url = await this.s3Service.generatePresignedUrlForDownload(item.path)
       }
       if (i === 0 || item.itemKey === 'gpkg') {
@@ -212,7 +225,7 @@ export class PrepareService {
       return
     }
   }
-  
+
   async getArtMetaData(art: DeliveryItemDto): Promise<{ totalLength: number; }> {
     const headers = await this.httpService.getUrlHead(art.url)
     const totalLength = Number(headers['content-length']);
@@ -236,7 +249,7 @@ export class PrepareService {
     await this.deliveryRepo.update(dlv.catalogId, { size: dlv.size })
   }
 
-  async prepareItemToDownload(dlv: DeliveryEntity, art: DeliveryItemDto, dlvSig: any): Promise<void> {    
+  async prepareItemToDownload(dlv: DeliveryEntity, art: DeliveryItemDto, dlvSig: any): Promise<void> {
     let dlvItem = await this.deliveryItemRepo.findOne({ where: { delivery: { catalogId: dlv.catalogId }, itemKey: art.itemKey } })
 
     if (!dlvItem) {
@@ -247,7 +260,7 @@ export class PrepareService {
     }
 
     let path;
-    if (art.metaData == 'docker_image'){
+    if (art.metaData == 'docker_image') {
       const registry_url = this.HARBOR_CACHE_REGISTRY_URL
       path = `${registry_url}/${art.url.substring(art.url.indexOf('/') + 1)}`;
       dlvItem.path = path
@@ -259,7 +272,7 @@ export class PrepareService {
       dlvItem.hashAlgorithm = art.hash?.algorithm
       dlvItem = await this.deliveryItemRepo.save(dlvItem)
       return
-    }else {
+    } else {
       path = `cache/${art.metaData}/${dlv.catalogId}${art.url.substring(art.url.lastIndexOf("/"), art.url.includes("?") ? art.url.indexOf("?") : art.url.length)}`;
       dlvItem.path = path
       dlvItem.status = PrepareStatusEnum.START
@@ -282,7 +295,7 @@ export class PrepareService {
 
   // TODO needs a test
   async startDeliveryIfStooped(dlv: DeliveryEntity, dlvSrcFn: (dlv: DeliveryEntity) => Promise<PrepareDeliveryResDto>) {
-    
+
     const isDownloadStooped = async () => {
       const delivery = await this.deliveryRepo.findOneBy({ catalogId: dlv.catalogId })
       const deliveryItems = await this.getDeliveryItems(dlv)

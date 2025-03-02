@@ -5,6 +5,7 @@ import { DeliveryEntity } from '@app/common/database-tng/entities';
 import { HttpClientService } from './http-client.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DeliveryService {
@@ -12,7 +13,8 @@ export class DeliveryService {
 
   constructor(
     private httpService: HttpClientService,
-    @InjectRepository(DeliveryEntity) private readonly deliveryRepo: Repository<DeliveryEntity> 
+    private readonly config: ConfigService,
+    @InjectRepository(DeliveryEntity) private readonly deliveryRepo: Repository<DeliveryEntity>
   ) { }
 
 
@@ -30,10 +32,10 @@ export class DeliveryService {
   private async getDeliveryArtifacts(dlv: DeliveryEntity): Promise<PrepareDeliveryResDto> {
     let prepReq = new PrepareDeliveryReqDto();
     prepReq.catalogId = dlv.catalogId;
-    prepReq.deviceId = dlv.deviceId;
+    prepReq.deviceId = this.config.get("SERVER_NAME") || "delivery-proxy";
     prepReq.itemType = ItemTypeEnum.CACHE;
 
-    let prepRes = await this.httpService.apiPrepareDelivery(prepReq);        
+    let prepRes = await this.httpService.apiPrepareDelivery(prepReq);
     if (prepRes.status == PrepareStatusEnum.IN_PROGRESS || prepRes.status == PrepareStatusEnum.START) {
       do {
         /**
@@ -42,7 +44,7 @@ export class DeliveryService {
         await new Promise(resolve => setTimeout(resolve, 2000));
         prepRes = await this.httpService.apiGetPreparedDelivery(dlv.catalogId);
         dlv.lastUpdatedDate = new Date()
-        this.deliveryRepo.save(dlv)        
+        this.deliveryRepo.save(dlv)
       } while (prepRes.status == PrepareStatusEnum.IN_PROGRESS || prepRes.status == PrepareStatusEnum.START);
     }
 
