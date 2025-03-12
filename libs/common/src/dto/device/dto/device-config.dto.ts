@@ -14,7 +14,7 @@ export enum TargetStoragePolicy {
   FLASH_ONLY = "FlashOnly"
 }
 
-export class BaseConfigDto{
+export class BaseConfigDto {
   @ApiProperty({ required: true })
   @IsString()
   @IsNotEmpty()
@@ -119,13 +119,24 @@ export class BaseConfigDto{
 
 export class WindowsConfigDto extends BaseConfigDto {
 
-  @ApiProperty({ required: false, type: [LayersConfigDto] }) // Specify type as a single object
+  @ApiProperty({ required: false, type: [LayersConfigDto] })
   @IsOptional()
   @ValidateNested()
   @IsArray()
   @Type(() => LayersConfigDto)
   @Expose()
   layers: LayersConfigDto[];
+
+  @ApiProperty({ required: false, type: String, isArray: true })
+  @IsOptional()
+  @Expose()
+  getAppServerUrls: string[] | { url: string, delete: boolean };
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @Expose()
+  mapsStoragePath: string
 
   constructor() {
     super();
