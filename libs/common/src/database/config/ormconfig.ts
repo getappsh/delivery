@@ -1,10 +1,11 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
-import { UploadVersionEntity, OrgGroupEntity, ProjectEntity, MemberProjectEntity, MemberEntity, DiscoveryMessageEntity, DeployStatusEntity, DeviceEntity, DeliveryStatusEntity, MapEntity, DeviceMapStateEntity, ProductEntity, BugReportEntity, OrgUIDEntity, DeviceComponentEntity, ComponentOfferingEntity, DeviceConfigEntity, MapOfferingEntity, RegulationEntity, RegulationTypeEntity} from '../entities';
+import { PlatformEntity, DocEntity, FileUploadEntity, UploadVersionEntity, OrgGroupEntity, ProjectEntity, MemberProjectEntity, MemberEntity, DiscoveryMessageEntity, DeployStatusEntity, DeviceEntity, DeliveryStatusEntity, MapEntity, DeviceMapStateEntity, ProductEntity, BugReportEntity, OrgUIDEntity, DeviceComponentEntity, ComponentOfferingEntity, DeviceConfigEntity, MapOfferingEntity, RegulationEntity, RegulationTypeEntity, RegulationStatusEntity, ReleaseEntity, ReleaseArtifactEntity, ProjectTokenEntity} from '../entities';
 import { join } from 'path';
 import { readFileSync } from 'fs'
 import { JobsEntity } from '../entities/map-updatesCronJob';
 import { DeliveryEntity, DeliveryItemEntity, CacheConfigEntity } from '../../database-tng/entities';
+import { ReleaseSubscriber } from '../subscribers';
 
 const region = process.env.REGION ? `_${process.env.REGION}` : '';
 let migrationsRun: boolean = true
@@ -22,6 +23,8 @@ const ormConfig = new DataSource({
 
 
   ...getDBAuthParams(),
+
+  subscribers: [ReleaseSubscriber],
   entities: [
     UploadVersionEntity,
     ProjectEntity,
@@ -47,6 +50,13 @@ const ormConfig = new DataSource({
     MapOfferingEntity,
     RegulationEntity,
     RegulationTypeEntity,
+    RegulationStatusEntity,
+    FileUploadEntity,
+    ReleaseEntity,
+    ReleaseArtifactEntity,
+    ProjectTokenEntity,
+    DocEntity,
+    PlatformEntity,
   ],
   migrations: [join(__dirname, '../migration/*.{js,ts}')],
   logging: false,
