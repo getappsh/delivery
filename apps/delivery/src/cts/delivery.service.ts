@@ -1,35 +1,46 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MapEntity, MapImportStatusEnum, UploadStatus, UploadVersionEntity, PrepareStatusEnum, HashAlgorithmEnum, ItemTypeEnum, AssetTypeEnum } from '@app/common/database/entities';
+import { MapEntity, MapImportStatusEnum, UploadStatus, UploadVersionEntity, PrepareStatusEnum, HashAlgorithmEnum, ItemTypeEnum, AssetTypeEnum, ReleaseEntity, ReleaseStatusEnum, ReleaseArtifactEntity, ArtifactTypeEnum } from '@app/common/database/entities';
 import { PrepareDeliveryResDto } from '@app/common/dto/delivery';
 import { S3Service } from '@app/common/AWS/s3.service';
 import { DeliveryItemDto } from '@app/common/dto/delivery/dto/delivery-item.dto';
 import { HttpClientService } from './http-client.service';
 import { DeliveryError } from '@app/common/dto/delivery/dto/delivery-error';
 import { ErrorCode, ErrorDto } from '@app/common/dto/error';
+import { ConfigService } from '@nestjs/config';
+import { MinioClientService } from '@app/common/AWS/minio-client.service';
 
 @Injectable()
 export class DeliveryService {
   private readonly logger = new Logger(DeliveryService.name);
 
+  private readonly bucketName = this.configService.get('BUCKET_NAME');
+
+
   constructor(
     // private readonly artifactory: ArtifactoryService,
+    private readonly configService: ConfigService,
+    private readonly minioClient: MinioClientService,
     private s3Service: S3Service,
     private httpService: HttpClientService,
-    @InjectRepository(UploadVersionEntity) private readonly uploadVersionRepo: Repository<UploadVersionEntity>,
     @InjectRepository(MapEntity) private readonly mapRepo: Repository<MapEntity>,
+    @InjectRepository(ReleaseEntity) private readonly releaseRepo: Repository<ReleaseEntity>,
   ) { }
 
 
-  async prepareDelivery(catalogId: string): Promise<PrepareDeliveryResDto> {
+  async prepareDeliveryV2(catalogId: string): Promise<PrepareDeliveryResDto> {
     let prepRes = new PrepareDeliveryResDto()
     prepRes.catalogId = catalogId;
     try {
-      const comp = await this.uploadVersionRepo.findOneBy({ catalogId });
-      if (comp) {
-        if (comp.uploadStatus == UploadStatus.READY) {
-          return await this.getCompPrepDlvRes(comp, prepRes)
+      const release = await this.releaseRepo.findOne({
+        where: { catalogId },
+        relations: { artifacts: {fileUpload: true}, dependencies: {artifacts: {fileUpload: true}} }, 
+      });
+
+      if (release) {
+        if (release.status == ReleaseStatusEnum.RELEASED) {
+          return await this.getCompPrepDlvResV2(release, prepRes)
         } else {
           const msg = `Catalog Id '${catalogId}' package, not yet available for delivery`
           this.logger.warn(msg)
@@ -74,7 +85,7 @@ export class DeliveryService {
     jsonArtifacts.catalogId = prepRes.catalogId;
     jsonArtifacts.itemKey = "json"
     jsonArtifacts.url = this.changeExtensionToJson(map.packageUrl);
-    jsonArtifacts.metaData = ItemTypeEnum.MAP.toString()
+    jsonArtifacts.artifactType = ItemTypeEnum.MAP.toString()
 
 
     let mapJson = await this.httpService.getMapJson(jsonArtifacts.url);
@@ -83,7 +94,7 @@ export class DeliveryService {
     geoArtifacts.catalogId = prepRes.catalogId;
     geoArtifacts.itemKey = "gpkg"
     geoArtifacts.url = map.packageUrl;
-    geoArtifacts.metaData = ItemTypeEnum.MAP.toString()
+    geoArtifacts.artifactType = ItemTypeEnum.MAP.toString()
     if (mapJson.sha256) {
       geoArtifacts.hash = {
         algorithm: HashAlgorithmEnum.SHA256Hex,
@@ -92,6 +103,51 @@ export class DeliveryService {
     }
 
     prepRes.Artifacts = [geoArtifacts, jsonArtifacts];
+
+    return prepRes
+  }
+
+  private async getArtifactsFromRelease(release: ReleaseEntity, dlvCatalogId: string): Promise<DeliveryItemDto[]> {
+    const artifacts = []
+    for (const art of release.artifacts) {
+      if (!art.isInstallationFile) continue;
+      
+      let compArtifacts = new DeliveryItemDto()
+      compArtifacts.catalogId = dlvCatalogId;
+      compArtifacts.id = art.id
+      compArtifacts.metaData = JSON.stringify(art.metadata)
+      
+      if(art.type === ArtifactTypeEnum.DOCKER_IMAGE){
+        compArtifacts.artifactType = AssetTypeEnum.DOCKER_IMAGE;
+        compArtifacts.url = art.dockerImageUrl
+        const imageName = art.dockerImageUrl.substring(art.dockerImageUrl.lastIndexOf("/") + 1);
+        compArtifacts.itemKey = `${release.catalogId}@${imageName}`;
+
+      }else {
+        compArtifacts.artifactType = ItemTypeEnum.SOFTWARE
+        compArtifacts.size = art.fileUpload?.size;
+        compArtifacts.url = await this.minioClient.generatePresignedDownloadUrl(this.bucketName, art.fileUpload.objectKey);
+        
+        // Maybe change this to file type
+        compArtifacts.itemKey = `${release.catalogId}@${art.fileUpload.fileName}`;
+
+      }
+      artifacts.push(compArtifacts)      
+    }
+
+    return artifacts
+  }
+
+  async getCompPrepDlvResV2(release: ReleaseEntity, prepRes: PrepareDeliveryResDto): Promise<PrepareDeliveryResDto> {
+    prepRes.status = PrepareStatusEnum.DONE;
+
+    const artifacts = await this.getArtifactsFromRelease(release, prepRes.catalogId);
+    for (let dep of release.dependencies){
+      const arts = await this.getArtifactsFromRelease(dep, prepRes.catalogId)
+      artifacts.push(...arts)
+    }
+    
+    prepRes.Artifacts = artifacts
 
     return prepRes
   }

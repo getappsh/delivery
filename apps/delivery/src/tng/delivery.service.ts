@@ -48,7 +48,7 @@ export class DeliveryService {
       } while (prepRes.status == PrepareStatusEnum.IN_PROGRESS || prepRes.status == PrepareStatusEnum.START);
     }
 
-    if (prepRes.status == PrepareStatusEnum.ERROR || (prepRes.status == PrepareStatusEnum.DONE && !prepRes.url)) {
+    if (prepRes.status == PrepareStatusEnum.ERROR) {
       throw Error("Prepare status from server is Error");
     }
 

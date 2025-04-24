@@ -28,10 +28,10 @@ export class DeliveryController {
     this.logger.log(`Prepare delivery for catalogId: ${preDlv.catalogId}`)
     if (this.useCache) {
       return this.prepareService.prepareDelivery(preDlv, async (dlv: DeliveryEntity) => {
-        return await this.deliveryService.prepareDelivery(dlv.catalogId)
+        return await this.deliveryService.prepareDeliveryV2(dlv.catalogId)
       });
     }
-    const res = await this.deliveryService.prepareDelivery(preDlv.catalogId);
+    const res = await this.deliveryService.prepareDeliveryV2(preDlv.catalogId);
     return res;
 
   }
@@ -40,9 +40,9 @@ export class DeliveryController {
   async getPrepareDeliveryStatus(@RpcPayload("stringValue") catalogId: string) {
     this.logger.log(`Get prepared delivery status for catalogId: ${catalogId}`);
     if (this.useCache) {
-      return this.prepareService.getPreparedDeliveryStatus(catalogId, async (dlv: DeliveryEntity) => await this.deliveryService.prepareDelivery(dlv.catalogId));
+      return this.prepareService.getPreparedDeliveryStatus(catalogId, async (dlv: DeliveryEntity) => await this.deliveryService.prepareDeliveryV2(dlv.catalogId));
     }
-    const res = await this.deliveryService.prepareDelivery(catalogId);
+    const res = await this.deliveryService.prepareDeliveryV2(catalogId);
     return res;
   }
 
