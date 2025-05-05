@@ -1,6 +1,6 @@
 import { DatabaseModule } from '@app/common';
 import { S3Service } from '@app/common/AWS/s3.service';
-import { UploadVersionEntity, ProjectEntity, MemberProjectEntity, MemberEntity, DeliveryStatusEntity, DeviceEntity, MapEntity, DeviceMapStateEntity } from '@app/common/database/entities';
+import { UploadVersionEntity, ProjectEntity, MemberProjectEntity, MemberEntity, DeliveryStatusEntity, DeviceEntity, MapEntity, DeviceMapStateEntity, ReleaseEntity } from '@app/common/database/entities';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,6 +11,7 @@ import { HttpClientService } from './http-client.service';
 import { HttpConfigModule } from '@app/common/http-config/http-config.module';
 import { DeliveryEntity, DeliveryItemEntity } from '@app/common/database-tng/entities';
 import { CacheModule } from '../cache/cache.module';
+import { MinioClientService } from '@app/common/AWS/minio-client.service';
 
 @Module({
   imports: [
@@ -27,13 +28,14 @@ import { CacheModule } from '../cache/cache.module';
       MapEntity,
       DeviceMapStateEntity,
       DeliveryEntity,
-      DeliveryItemEntity
+      DeliveryItemEntity,
+      ReleaseEntity,
     ]),
     HttpModule,
     HttpConfigModule,
-    CacheModule
+    CacheModule,
   ],
   controllers: [DeliveryController],
-  providers: [DeliveryService, S3Service, HttpClientService],
+  providers: [DeliveryService, S3Service, HttpClientService, MinioClientService],
 })
 export class CtsModule { }
