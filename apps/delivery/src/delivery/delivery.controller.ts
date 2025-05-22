@@ -19,7 +19,7 @@ export class DeliveryController {
     configService: ConfigService,
     private readonly deliveryService: DeliveryService,
   ) {
-    this.useCache = configService.get("USE_CACHE") === "true"
+    this.useCache = configService.get("USE_CACHE") === "true" || configService.get("IS_PROXY") == "true"
   }
 
   @EventPattern(DeliveryTopicsEmit.UPDATE_DOWNLOAD_STATUS)
@@ -64,11 +64,11 @@ export class DeliveryController {
     return "Delivery service is success, Version: " + version
   }
 
-  private readImageVersion(){
+  private readImageVersion() {
     let version = 'unknown'
-    try{
-      version = fs.readFileSync('NEW_TAG.txt','utf8');
-    }catch(error){
+    try {
+      version = fs.readFileSync('NEW_TAG.txt', 'utf8');
+    } catch (error) {
       this.logger.error(`Unable to read image version - error: ${error}`)
     }
     return version
