@@ -53,7 +53,7 @@ export class ImportPayload {
     importPayload.webhook = [
       {
         events: ["TASK_COMPLETED", "TASK_FAILED"],
-        url: process.env.LIBOT_CALLBACK_URL
+        url: process.env.LIBOT_CALLBACK_URL ?? ""
       }
     ]
     importPayload.ROI = {

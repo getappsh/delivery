@@ -142,7 +142,7 @@ export class MapProductResDto {
     product.id = records.properties.id
     product.catalogId = records.properties.catalogId
     product.productId = records.properties.productId
-    product.productName = process.env.SEQUENTIAL_PRODUCT_ID?.split("-")[0]
+    product.productName = process.env.SEQUENTIAL_PRODUCT_ID?.split("-")[0] ?? ""
     product.productVersion = Number(records.properties.productVersion)
     product.productType = records.properties.productType
     product.ingestionDate = new Date(records.properties.ingestionDateUTC);
@@ -158,7 +158,7 @@ export class MapProductResDto {
     return product
   }
 
-  static productRegionSelector(countries: string, cities: string) {
+  static productRegionSelector(countries: string, cities: string | null) {
     if (cities == null) {
       if (countries == null) {
         return ""
