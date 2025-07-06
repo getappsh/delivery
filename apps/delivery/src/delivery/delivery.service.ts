@@ -55,6 +55,8 @@ export class DeliveryService {
         }else if(dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR){
           deviceState.state = DeviceComponentStateEnum.DELIVERY;
           deviceState.error = "Error"
+        }else if(dlvStatus.deliveryStatus === DeliveryStatusEnum.DONE){
+          deviceState.state = DeviceComponentStateEnum.DOWNLOADED;
         }else {
           deviceState.state = DeviceComponentStateEnum.DELIVERY;
         }
