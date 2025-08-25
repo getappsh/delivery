@@ -4,7 +4,7 @@ import { DeliveryStatusEntity, DeviceEntity, DeviceMapStateEntity, MapEntity, Up
 import { mockDeliveryStatusRepo, mockDeviceRepo, mockMapRepo, mockUploadVersionRepo } from "@app/common/database/test/support/__mocks__";
 import { Repository } from "typeorm";
 import { NotFoundException } from "@nestjs/common";
-import { DeliveryService } from "./delivery.service";
+import { DeliveryService } from "./cts-delivery.service";
 import { deliveryStatusDtoStub } from "@app/common/dto/delivery";
 import { S3Service } from "@app/common/AWS/s3.service";
 

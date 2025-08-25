@@ -1,7 +1,7 @@
 import { DeliveryTopics } from '@app/common/microservice-client/topics';
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, EventPattern } from '@nestjs/microservices';
-import { DeliveryService } from './delivery.service';
+import { DeliveryService } from './cts-delivery.service';
 import { PrepareDeliveryReqDto } from '@app/common/dto/delivery';
 import { ConfigService } from '@nestjs/config';
 import { PrepareService } from '../cache/prepare.service';

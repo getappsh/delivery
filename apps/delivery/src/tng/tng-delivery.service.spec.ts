@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DeliveryService } from './delivery.service';
+import { DeliveryService } from './tng-delivery.service';
 import { S3Service } from '@app/common/AWS/s3.service';
 import { DownloadService } from '../cache/download.service';
 import { Repository } from 'typeorm';

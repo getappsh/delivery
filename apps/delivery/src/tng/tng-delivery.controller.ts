@@ -1,5 +1,5 @@
 import { Controller, Logger } from '@nestjs/common';
-import { DeliveryService } from './delivery.service';
+import { DeliveryService } from './tng-delivery.service';
 import { ApiTags } from '@nestjs/swagger';
 import { PrepareDeliveryReqDto } from '@app/common/dto/delivery';
 import { MessagePattern} from '@nestjs/microservices';

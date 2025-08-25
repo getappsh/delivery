@@ -4,8 +4,8 @@ import { UploadVersionEntity, ProjectEntity, MemberProjectEntity, MemberEntity, 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DeliveryController } from './delivery.controller';
-import { DeliveryService } from './delivery.service';
+import { DeliveryController } from './cts-delivery.controller';
+import { DeliveryService } from './cts-delivery.service';
 import { HttpModule } from '@nestjs/axios';
 import { HttpClientService } from './http-client.service';
 import { HttpConfigModule } from '@app/common/http-config/http-config.module';
