@@ -7,7 +7,9 @@ export const UploadTopics = {
     UPDATE_UPLOAD_STATUS: `getapp-upload.update-upload-status${region}`,
     LAST_VERSION: `getapp-upload.last-version${region}`,
     CHECK_HEALTH: `getapp-upload.check-health${region}`,
+
     CREATE_FILE_UPLOAD_URL: `getapp-upload.create-file-upload-url${region}`,
+    GET_FILE_UPLOAD_URL: `getapp-upload.get-file-upload-url${region}`,
 
     // Releases
     GET_RELEASES: `getapp-upload.get-releases${region}`,
@@ -30,6 +32,7 @@ export const UploadTopics = {
 
 export const UploadTopicsEmit = {
     PROJECT_REGULATION_CHANGED: `getapp-upload.project-regulation-changed${region}`,
+    UPDATE_FILE_UPLOAD: `getapp-upload.update-file-upload${region}`,
 }
 
 export const DeliveryTopics = {
@@ -191,6 +194,13 @@ export const DevicesGroupTopics = {
     GET_GROUPS: `getapp-device.group.get-all${region}`,
     GET_GROUP_DEVICES: `getapp-device.group.get-devices${region}`,
     SET_GROUP_DEVICES: `getapp-device.group.set-devices${region}`,
+    DELETE_GROUP: `getapp-device.group.delete${region}`,
+    CREATE_ORG_IDS: `getapp-device.group.org-ids.create${region}`,
+    GET_ORG_IDS: `getapp-device.group.org-ids.get-all${region}`,
+    GET_ORG_ID: `getapp-device.group.org-ids.get${region}`,
+    EDIT_ORG_IDS: `getapp-device.group.org-ids.edit${region}`,
+    DELETE_ORG_IDS: `getapp-device.group.org-ids.delete${region}`,
+    GET_ORG_DEVICES: `getapp-device.group.org-devices.get-all${region}`
 } as const
 
 export const DevicesHierarchyTopics = {
