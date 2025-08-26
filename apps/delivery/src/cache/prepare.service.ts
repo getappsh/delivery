@@ -271,6 +271,7 @@ export class PrepareService {
       dlvItem.size = null
       dlvItem.hash = art.hash?.hash
       dlvItem.hashAlgorithm = art.hash?.algorithm
+      dlvItem.signature = art.signature
       dlvItem = await this.deliveryItemRepo.save(dlvItem)
       return
     } else {
@@ -282,6 +283,7 @@ export class PrepareService {
       dlvItem.size = null
       dlvItem.hash = art.hash?.hash
       dlvItem.hashAlgorithm = art.hash?.algorithm
+      dlvItem.signature = art.signature
       dlvItem = await this.deliveryItemRepo.save(dlvItem)
     }
 

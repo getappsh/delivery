@@ -116,6 +116,7 @@ export class DeliveryService {
       compArtifacts.catalogId = dlvCatalogId;
       compArtifacts.id = art.id
       compArtifacts.metaData = JSON.stringify(art.metadata)
+      compArtifacts.signature = art?.fileUpload?.signature;
       
       if(art.type === ArtifactTypeEnum.DOCKER_IMAGE){
         compArtifacts.artifactType = AssetTypeEnum.DOCKER_IMAGE;
@@ -152,29 +153,29 @@ export class DeliveryService {
     return prepRes
   }
 
-  async getCompPrepDlvRes(comp: UploadVersionEntity, prepRes: PrepareDeliveryResDto): Promise<PrepareDeliveryResDto> {
-    prepRes.status = PrepareStatusEnum.DONE;
-    let compArtifacts = new DeliveryItemDto()
-    compArtifacts.catalogId = prepRes.catalogId;
-    compArtifacts.itemKey = comp.url.substring(comp.url.lastIndexOf(".") + 1)
-    compArtifacts.size = comp.virtualSize
+  // async getCompPrepDlvRes(comp: UploadVersionEntity, prepRes: PrepareDeliveryResDto): Promise<PrepareDeliveryResDto> {
+  //   prepRes.status = PrepareStatusEnum.DONE;
+  //   let compArtifacts = new DeliveryItemDto()
+  //   compArtifacts.catalogId = prepRes.catalogId;
+  //   compArtifacts.itemKey = comp.url.substring(comp.url.lastIndexOf(".") + 1)
+  //   compArtifacts.size = comp.virtualSize
 
-    let url
-    if (comp.assetType == AssetTypeEnum.DOCKER_IMAGE){
-      compArtifacts.metaData = AssetTypeEnum.DOCKER_IMAGE;
-      url = comp.url
-    }else{
-      compArtifacts.metaData = ItemTypeEnum.SOFTWARE
-      url = await this.s3Service.generatePresignedUrlForDownload(comp.url)
-    }
-    prepRes.url = url;
-    compArtifacts.url = url
+  //   let url
+  //   if (comp.assetType == AssetTypeEnum.DOCKER_IMAGE){
+  //     compArtifacts.metaData = AssetTypeEnum.DOCKER_IMAGE;
+  //     url = comp.url
+  //   }else{
+  //     compArtifacts.metaData = ItemTypeEnum.SOFTWARE
+  //     url = await this.s3Service.generatePresignedUrlForDownload(comp.url)
+  //   }
+  //   prepRes.url = url;
+  //   compArtifacts.url = url
 
 
-    prepRes.Artifacts = [compArtifacts];
+  //   prepRes.Artifacts = [compArtifacts];
 
-    return prepRes
-  }
+  //   return prepRes
+  // }
 
   private changeExtensionToJson(s: string): string {
     return s.substring(0, s.lastIndexOf(".")) + ".json"
