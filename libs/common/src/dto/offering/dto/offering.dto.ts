@@ -1,9 +1,45 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional, IntersectionType, PartialType } from "@nestjs/swagger";
 import { ComponentV2Dto } from "../../upload";
 import { DeviceTypeHierarchyDto, PlatformHierarchyDto, ProjectRefDto } from "../../devices-hierarchy";
 import { BadRequestException } from "@nestjs/common";
-import { ValidateIf, IsString, IsNotEmpty } from "class-validator";
-import { Transform } from "class-transformer";
+import { ValidateIf, IsString, IsNotEmpty, IsInt, IsOptional, IsPositive } from "class-validator";
+import { Transform, Type } from "class-transformer";
+
+export class GetProjectsOfferingDto {
+  @ApiProperty({
+    description: 'The search term (matches project name or partial match)',
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  @Type(() => String)
+  query: string;
+
+  
+  @ApiPropertyOptional({
+    description: 'The page number to fetch (default: 1)',
+    example: 1,
+  })
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  @Type(() => Number)
+  page?: number = 1;
+
+  @ApiPropertyOptional({
+    description: 'Number of projects per page (default: 20)',
+    example: 20,
+  })
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  @Type(() => Number)
+  perPage?: number = 20;
+
+  toString() {
+    return JSON.stringify(this);
+  }
+}
 
 export class ProjectRefOfferingDto {
   @ApiProperty({ description: "Name of the project" })
@@ -12,6 +48,12 @@ export class ProjectRefOfferingDto {
   @ApiProperty({ description: "Identifier of the project" })
   projectId: number;
 
+  @ApiProperty({ required: false, description: "Display name of the project" })
+  displayName?: string;
+
+  @ApiProperty({ required: false, description: "Label of the project" })
+  label?: string;
+
   @ApiProperty({ type: ComponentV2Dto, required: false })
   release?: ComponentV2Dto;
 
@@ -19,6 +61,8 @@ export class ProjectRefOfferingDto {
     const dto = new ProjectRefOfferingDto();
     dto.projectId = projectRef.projectId;
     dto.projectName = projectRef.projectName;
+    dto.displayName = projectRef.displayName;
+    dto.label = projectRef.label;
     return dto;
   }
 
@@ -118,4 +162,24 @@ export class DeviceTypeOfferingParams {
     throw new BadRequestException('Invalid device type identifier');
   })
   deviceTypeIdentifier: string | number
+}
+
+
+export class ProjectOfferingFilterQuery extends IntersectionType(
+  PartialType(DeviceTypeOfferingParams),
+  PartialType(PlatformOfferingParams)
+){
+  @ValidateIf(o => o.platformIdentifier !== undefined && o.platformIdentifier !== null)
+  @IsNotEmpty({ message: 'deviceTypeIdentifier is required when platformIdentifier is provided' })
+  deviceTypeIdentifier?: string | number | undefined;
+
+  projectIdentifier?: string | number | undefined;
+}
+
+export class DeviceTypeOfferingFilterQuery extends IntersectionType(
+  PartialType(PlatformOfferingParams)
+){
+
+    deviceTypeIdentifier?: string | number  | undefined;
+
 }
