@@ -36,7 +36,7 @@ export class ReleaseArtifactEntity extends BaseEntity {
   fileUpload?: FileUploadEntity;
   
   @Column({ name: 'is_executable', type: 'boolean', default: false})
-  isExectuable: boolean
+  isExecutable: boolean
 
   @Column({ name: 'arguments', type: 'text', nullable: true, default: null})
   arguments?: string | null

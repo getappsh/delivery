@@ -52,7 +52,7 @@ export class DeliveryItemDto {
   signature?: string
   
   @ApiProperty({ required: false })
-  isExectuable: boolean
+  isExecutable: boolean
   
   @ApiProperty({ required: false })
   arguments?: string | null

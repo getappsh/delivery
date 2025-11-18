@@ -131,7 +131,7 @@ export class ReleaseArtifactDto {
     dto.status = artifact?.fileUpload?.status
     dto.size = artifact?.fileUpload?.size
     dto.arguments = artifact?.arguments;
-    dto.isExecutable = artifact?.isExectuable;
+    dto.isExecutable = artifact?.isExecutable;
 
     return dto
   }
