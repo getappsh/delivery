@@ -8,7 +8,7 @@ import {
 
 
 
-export class UpdateFileMetaDataDto {
+export class UpdateFilePropertiesDto {
 
 
   projectIdentifier: string | number
