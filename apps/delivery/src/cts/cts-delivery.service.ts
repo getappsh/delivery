@@ -117,6 +117,8 @@ export class DeliveryService {
       compArtifacts.id = art.id
       compArtifacts.metaData = JSON.stringify(art.metadata)
       compArtifacts.signature = art?.fileUpload?.signature;
+      compArtifacts.isExecutable = art.isExecutable;
+      compArtifacts.arguments = art.arguments;
       
       if(art.type === ArtifactTypeEnum.DOCKER_IMAGE){
         compArtifacts.artifactType = AssetTypeEnum.DOCKER_IMAGE;

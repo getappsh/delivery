@@ -27,6 +27,8 @@ export const UploadTopics = {
     SET_VERSION_REGULATION_STATUS: `getapp-upload.set-version-regulation-status${region}`,
     SET_VERSION_REGULATION_COMPLIANCE: `getapp-upload.set-version-regulation-compliance${region}`,
     DELETE_VERSION_REGULATION_STATUS: `getapp-upload.delete-version-regulation-status${region}`,
+    //update file metadata
+    UPDATE_FILE_METADATA: `getapp-upload.update-file-metadata${region}`,
 
 } as const
 
@@ -57,7 +59,13 @@ export const OfferingTopics = {
     GET_OFFERING_FOR_PLATFORM: `getapp-offering.get-offering-for-platform${region}`,
     GET_OFFERING_FOR_DEVICE_TYPE: `getapp-offering.get-offering-for-device-type${region}`,
     GET_OFFERING_FOR_PROJECT: `getapp-offering.get-offering-for-project${region}`,
+    GET_OFFERING_FOR_ALL_PROJECTS: `getapp-offering.get-offering-for-all-project${region}`,
     GET_OFFER_OF_COMP: `getapp-offering.get-offering-of-comp${region}`,
+
+    // Policies
+    UPSERT_OFFERING_TREE_POLICY: `getapp-offering.upsert-offering-tree-policy${region}`,
+    GET_OFFERING_TREE_POLICIES: `getapp-offering.get-offering-tree-policies${region}`,
+    
 } as const
 
 export const OfferingTopicsEmit = {
@@ -120,6 +128,12 @@ export const ProjectManagementTopics = {
     CREATE_PROJECT_DOC: `getapp-project-management.create-project-doc${region}`,
     UPDATE_PROJECT_DOC: `getapp-project-management.update-project-doc${region}`,
     DELETE_PROJECT_DOC: `getapp-project-management.delete-project-doc${region}`,
+
+    // Labels
+    GET_LABELS: `getapp-project-management.get-labels${region}`,
+    CREATE_LABEL: `getapp-project-management.create-label${region}`,
+    UPDATE_LABEL: `getapp-project-management.update-label${region}`,
+    DELETE_LABEL: `getapp-project-management.delete-label${region}`,
 
     CHECK_HEALTH: `getapp-project-management.check-health${region}`
 } as const
