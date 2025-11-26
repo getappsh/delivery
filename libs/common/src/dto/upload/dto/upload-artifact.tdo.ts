@@ -71,6 +71,6 @@ export class  UploadArtifactDto{
     @IsString()
     @IsOptional()
     @ApiProperty({ required: false})
-    arguments: string
+    arguments: string | null
 
 }
