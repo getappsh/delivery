@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { DownloadService } from './download.service';
 import { DeliveryStatusDto, PrepareDeliveryReqDto, PrepareDeliveryResDto } from '@app/common/dto/delivery';
 import { ArtifactTypeEnum, PrepareStatusEnum } from '@app/common/database/entities';
-import { DeliveryEntity, DeliveryItemEntity } from '@app/common/database-tng/entities';
+import { DeliveryEntity, DeliveryItemEntity } from '@app/common/database-proxy/entities';
 import { HttpClientService } from './http-client.service';
 import { DeliveryItemDto, HashDto } from '@app/common/dto/delivery/dto/delivery-item.dto';
 import { ManagementService } from './management.service';
