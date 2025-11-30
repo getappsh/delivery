@@ -139,7 +139,7 @@ export class ManagementService implements OnApplicationBootstrap {
           if (this.env.get("IS_PROXY") === "true") {
             const dlvStatus = new DeliveryStatusDto()
             dlvStatus.catalogId = dlv.catalogId
-            dlvStatus.deviceId = 'TNG' // todo
+            dlvStatus.deviceId = 'PROXY' 
             dlvStatus.itemKey = item.itemKey
             dlvStatus.deliveryStatus = DeliveryStatusEnum.DELETED
             dlvStatus.type = ItemTypeEnum.CACHE

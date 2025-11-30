@@ -289,7 +289,7 @@ export class PrepareService {
 
     let dlvStatus = new DeliveryStatusDto()
     dlvStatus.catalogId = dlv.catalogId
-    dlvStatus.deviceId = 'TNG' // todo
+    dlvStatus.deviceId = 'PROXY' 
     dlvStatus.itemKey = dlvItem.itemKey
 
     return this.downloadService.startDownloadProcess(dlvItem, dlvStatus, path, art.url, dlvSig);

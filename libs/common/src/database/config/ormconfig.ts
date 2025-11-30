@@ -70,8 +70,10 @@ const ormConfig = new DataSource({
 
 function getDBAuthParams() {
   switch (process.env.DEPLOY_ENV) {
-    case "CTS":
-    case "TNG":
+    case "CTS":  //todo: remove in the future
+    case "TNG":  //todo: remove in the future
+    case "ORIGIN":
+    case "PROXY":
       return {
         ssl: {
           ca: [readFileSync(process.env.DB_PEM_PATH ?? "")],
