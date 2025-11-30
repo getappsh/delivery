@@ -1,14 +1,14 @@
 # Dockerfile to build the getapp application
-# to fit the prod environmet in the cts
+# to fit the prod environmet in the origin
 
 ############################################################
-###               ///    CTS part     ///                ###
+###               ///    ORIGIN part     ///                ###
 ############################################################
-FROM node:19.5.0-alpine as cts
+FROM node:19.5.0-alpine as origin
 
 WORKDIR /node-app
 
-# ===   create a uid and a gid to fit CTS project uid === #
+# ===   create a uid and a gid to fit ORIGIN project uid === #
 ARG uid=1004370000
 ARG username=getapp
 # Add the user to /etc/passwd
@@ -22,17 +22,17 @@ RUN apk --no-cache add ca-certificates bash curl
 # Create the CA certificates directory
 RUN mkdir -p /usr/local/share/ca-certificates/
 
-# ===   inside part - must be run inside in the CTS   === #
+# ===   inside part - must be run inside in the ORIGIN   === #
 # Update the CA certificates bundle inside the container
-# inside the CTS build the image only with these two lines, ant commit all the rest.
-# COPY idfcts/* /usr/local/share/ca-certificates/
+# inside the ORIGIN build the image only with these two lines, ant commit all the rest.
+# COPY origin/* /usr/local/share/ca-certificates/
 # RUN update-ca-certificates
 
 # # copt the app files
 RUN chown -R ${uid}:${uid} /node-app
 # COPY --chown=${uid}:${uid} . .
 
-# # inside the CTS the privios command wont work. so if for some resion you need to run this command inside the cts - you need to use these 2 commands insted.
+# # inside the ORIGIN the privios command wont work. so if for some resion you need to run this command inside the origin - you need to use these 2 commands insted.
 # # COPY . .
 # # RUN chown -R ${uid}:${uid} /node-app
 ENV CI=true
@@ -56,10 +56,10 @@ COPY . .
 
 # build
 ARG DB
-#ARG DB=database-tng
+#ARG DB=database-origin
 RUN npm run build --db=$DB
 
-FROM cts as deploy
+FROM origin as deploy
 
 ENV NODE_ENV=production
 
