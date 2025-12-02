@@ -272,6 +272,8 @@ export class PrepareService {
       dlvItem.hash = art.hash?.hash
       dlvItem.hashAlgorithm = art.hash?.algorithm
       dlvItem.signature = art.signature
+      dlvItem.isExecutable = art.isExecutable
+      dlvItem.arguments = art.arguments
       dlvItem = await this.deliveryItemRepo.save(dlvItem)
       return
     } else {
@@ -284,6 +286,8 @@ export class PrepareService {
       dlvItem.hash = art.hash?.hash
       dlvItem.hashAlgorithm = art.hash?.algorithm
       dlvItem.signature = art.signature
+      dlvItem.isExecutable = art.isExecutable
+      dlvItem.arguments = art.arguments
       dlvItem = await this.deliveryItemRepo.save(dlvItem)
     }
 
