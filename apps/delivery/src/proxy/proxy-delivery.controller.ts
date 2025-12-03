@@ -1,11 +1,11 @@
 import { Controller, Logger } from '@nestjs/common';
-import { DeliveryService } from './tng-delivery.service';
+import { DeliveryService } from './proxy-delivery.service';
 import { ApiTags } from '@nestjs/swagger';
 import { PrepareDeliveryReqDto } from '@app/common/dto/delivery';
 import { MessagePattern} from '@nestjs/microservices';
 import { DeliveryTopics } from '@app/common/microservice-client/topics';
 import { PrepareService } from '../cache/prepare.service';
-import { DeliveryEntity } from '@app/common/database-tng/entities';
+import { DeliveryEntity } from '@app/common/database-proxy/entities';
 import { RpcPayload } from '@app/common/microservice-client';
 
 @ApiTags("Delivery")

@@ -71,7 +71,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           # path to the Dockerfile
-          file: Dockerfile-cts
+          file: Dockerfile-origin
           context: .
           tags: ${{ secrets.REGISTRY_URL }}/getapp-dev/delivery:${{ needs.calculate_new_tag.outputs.tag }}
           push: true

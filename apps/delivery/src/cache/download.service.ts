@@ -7,7 +7,7 @@ import { Repository } from "typeorm";
 import { AxiosResponse } from "axios";
 import { DeliveryStatusDto } from "@app/common/dto/delivery";
 import { S3Service } from "@app/common/AWS/s3.service";
-import { DeliveryItemEntity } from "@app/common/database-tng/entities";
+import { DeliveryItemEntity } from "@app/common/database-proxy/entities";
 import { ConfigService } from "@nestjs/config";
 import { DeliveryError } from "@app/common/dto/delivery/dto/delivery-error";
 import { ErrorCode } from "@app/common/dto/error";
