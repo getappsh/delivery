@@ -293,7 +293,7 @@ export class PrepareService {
 
     let dlvStatus = new DeliveryStatusDto()
     dlvStatus.catalogId = dlv.catalogId
-    dlvStatus.deviceId = 'PROXY' 
+    dlvStatus.deviceId = 'PROXY' // TODO use server name env var if exist
     dlvStatus.itemKey = dlvItem.itemKey
 
     return this.downloadService.startDownloadProcess(dlvItem, dlvStatus, path, art.url, dlvSig);
