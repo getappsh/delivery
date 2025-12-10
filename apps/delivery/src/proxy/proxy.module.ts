@@ -1,17 +1,17 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { DeliveryController } from './tng-delivery.controller';
-import { DeliveryService } from './tng-delivery.service';
-import { TngDatabaseModule } from '@app/common/database-tng/tng-database.module';
+import { DeliveryController } from './proxy-delivery.controller';
+import { DeliveryService } from './proxy-delivery.service';
+import { ProxyDatabaseModule } from '@app/common/database-proxy/proxy-database.module';
 import { CacheModule } from '../cache/cache.module';
 import { HttpClientService } from './http-client.service';
 import { HttpConfigModule } from '@app/common/http-config/http-config.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DeliveryEntity } from '@app/common/database-tng/entities';
+import { DeliveryEntity } from '@app/common/database-proxy/entities';
 
 @Module({
   imports: [
-    TngDatabaseModule,
+    ProxyDatabaseModule,
     HttpModule,
     HttpConfigModule,
     CacheModule,
@@ -22,4 +22,4 @@ import { DeliveryEntity } from '@app/common/database-tng/entities';
   controllers: [DeliveryController],
   providers: [DeliveryService, HttpClientService],
 })
-export class TngModule { }
+export class ProxyModule { }

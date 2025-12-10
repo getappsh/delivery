@@ -1,16 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DeliveryService } from './tng-delivery.service';
+import { DeliveryService } from './proxy-delivery.service';
 import { S3Service } from '@app/common/AWS/s3.service';
 import { DownloadService } from '../cache/download.service';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { mockDeliveryRepo } from '@app/common/database-tng/test/support/__mocks__';
-import { deliveryEntityStub } from '@app/common/database-tng/test/support/subs';
+import { mockDeliveryRepo } from '@app/common/database-proxy/test/support/__mocks__';
+import { deliveryEntityStub } from '@app/common/database-proxy/test/support/subs';
 import { prepareDeliveryReqDtoStub } from '@app/common/dto/delivery/stubs/prepare-delivery-res.dot.sub';
 import { DeliveryEntity, PrepareStatusEnum } from '@app/common/database/entities';
 import { PrepareService } from '../cache/prepare.service';
-import { DeliveryEntity as DeliveryEntityTng } from '@app/common/database-tng/entities';
+import { DeliveryEntity as DeliveryEntityProxy } from '@app/common/database-proxy/entities';
 
 describe('DeliveryService', () => {
   let deliveryService: DeliveryService;
@@ -62,7 +62,7 @@ describe('DeliveryService', () => {
       deliveryRepository.findOneBy = jest.fn().mockResolvedValueOnce(undefined);
       downloadService.startDownloadProcess = jest.fn();
 
-      const result = await prepareService.prepareDelivery(prepDlv, () =>  (deliveryService.getDeliveryResources(dlvEntity as unknown as DeliveryEntityTng)));
+      const result = await prepareService.prepareDelivery(prepDlv, () =>  (deliveryService.getDeliveryResources(dlvEntity as unknown as DeliveryEntityProxy)));
       // const result = await deliveryService.prepareDelivery(prepDlv)
       
       expect(result).toEqual({ catalogId: prepDlv.catalogId, status: dlvEntity.status })
@@ -80,7 +80,7 @@ describe('DeliveryService', () => {
       
       deliveryRepository.findOneBy = jest.fn().mockResolvedValueOnce(dlvEntity);
       
-      const result = await prepareService.prepareDelivery(prepDlv, () =>  (deliveryService.getDeliveryResources(dlvEntity as unknown as DeliveryEntityTng)));
+      const result = await prepareService.prepareDelivery(prepDlv, () =>  (deliveryService.getDeliveryResources(dlvEntity as unknown as DeliveryEntityProxy)));
       // const result = await deliveryService.prepareDelivery(prepDlv)
 
       expect(result).toEqual({ catalogId: prepDlv.catalogId, status: dlvEntity.status })
@@ -98,7 +98,7 @@ describe('DeliveryService', () => {
       const catalogId = prepareDeliveryReqDtoStub().catalogId;
       const dlvStatus = deliveryEntityStub().status;
 
-      const result = await prepareService.getPreparedDeliveryStatus(catalogId, () =>  (deliveryService.getDeliveryResources(deliveryEntityStub() as unknown as DeliveryEntityTng)));
+      const result = await prepareService.getPreparedDeliveryStatus(catalogId, () =>  (deliveryService.getDeliveryResources(deliveryEntityStub() as unknown as DeliveryEntityProxy)));
       expect(result).toEqual({ catalogId: catalogId, status: dlvStatus })
 
       expect(deliveryRepository.findOneBy).toHaveBeenCalledWith({ catalogId });
@@ -116,7 +116,7 @@ describe('DeliveryService', () => {
       deliveryRepository.findOneBy = jest.fn().mockResolvedValueOnce(dlvEntity);
       s3Service.generatePresignedUrlForDownload = jest.fn().mockResolvedValueOnce(mockDownloadUrl);
 
-      const result = await prepareService.getPreparedDeliveryStatus(catalogId, () =>  (deliveryService.getDeliveryResources(deliveryEntityStub() as unknown as DeliveryEntityTng)));
+      const result = await prepareService.getPreparedDeliveryStatus(catalogId, () =>  (deliveryService.getDeliveryResources(deliveryEntityStub() as unknown as DeliveryEntityProxy)));
       expect(result).toEqual({ catalogId: catalogId, status: dlvEntity.status, url: mockDownloadUrl })
 
       expect(deliveryRepository.findOneBy).toHaveBeenCalledWith({ catalogId });
@@ -129,7 +129,7 @@ describe('DeliveryService', () => {
 
       deliveryRepository.findOneBy = jest.fn().mockResolvedValue(undefined);
 
-      await expect(prepareService.getPreparedDeliveryStatus(catalogId, () =>  (deliveryService.getDeliveryResources(deliveryEntityStub() as unknown as DeliveryEntityTng)))).rejects.toThrowError(NotFoundException);
+      await expect(prepareService.getPreparedDeliveryStatus(catalogId, () =>  (deliveryService.getDeliveryResources(deliveryEntityStub() as unknown as DeliveryEntityProxy)))).rejects.toThrowError(NotFoundException);
 
       expect(deliveryRepository.findOneBy).toHaveBeenCalledWith({ catalogId });
       expect(prepareService.startDeliveryIfStooped).not.toHaveBeenCalled();

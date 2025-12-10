@@ -4,7 +4,7 @@ import { PlatformEntity, DocEntity, FileUploadEntity, UploadVersionEntity, OrgGr
 import { join } from 'path';
 import { readFileSync } from 'fs'
 import { JobsEntity } from '../entities/map-updatesCronJob';
-import { DeliveryEntity, DeliveryItemEntity, CacheConfigEntity } from '../../database-tng/entities';
+import { DeliveryEntity, DeliveryItemEntity, CacheConfigEntity } from '../../database-proxy/entities';
 import { ReleaseSubscriber } from '../subscribers';
 
 const region = process.env.REGION ? `_${process.env.REGION}` : '';
@@ -70,8 +70,10 @@ const ormConfig = new DataSource({
 
 function getDBAuthParams() {
   switch (process.env.DEPLOY_ENV) {
-    case "CTS":
-    case "TNG":
+    case "CTS":  //todo: remove in the future
+    case "TNG":  //todo: remove in the future
+    case "ORIGIN":
+    case "PROXY":
       return {
         ssl: {
           ca: [readFileSync(process.env.DB_PEM_PATH ?? "")],

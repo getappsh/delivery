@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { CtsModule } from '../cts/cts.module';
+import {  OriginModule } from '../origin/origin.module';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '@app/common/logger/logger.module';
-import { TngModule } from '../tng/tng.module';
+import { ProxyModule } from '../proxy/proxy.module';
 import { ApmModule } from '@app/common/apm/apm.module';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
@@ -28,7 +28,7 @@ import { MicroserviceModule, MicroserviceName, MicroserviceType } from '@app/com
       DeviceEntity,
       MapEntity
     ]),
-    process.env.IS_PROXY === "true" ? TngModule : CtsModule,
+    process.env.IS_PROXY === "true" ? ProxyModule : OriginModule,
     CacheModule,
     ApmModule,
   ],

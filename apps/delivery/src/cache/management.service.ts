@@ -1,9 +1,9 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { S3Service } from '@app/common/AWS/s3.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeliveryEntity, DeliveryItemEntity } from '@app/common/database-tng/entities';
+import { DeliveryEntity, DeliveryItemEntity } from '@app/common/database-proxy/entities';
 import { Brackets, In, LessThanOrEqual, Not, Repository } from 'typeorm';
-import { CacheConfigEntity } from '@app/common/database-tng/entities/cache-config.entity';
+import { CacheConfigEntity } from '@app/common/database-proxy/entities/cache-config.entity';
 import { CacheConfigDto } from '@app/common/dto/delivery/dto/cache-config.dto';
 import { DeliveryStatusEnum, ItemTypeEnum, PrepareStatusEnum } from '@app/common/database/entities';
 import { DeliveryError } from '@app/common/dto/delivery/dto/delivery-error';
@@ -139,7 +139,7 @@ export class ManagementService implements OnApplicationBootstrap {
           if (this.env.get("IS_PROXY") === "true") {
             const dlvStatus = new DeliveryStatusDto()
             dlvStatus.catalogId = dlv.catalogId
-            dlvStatus.deviceId = 'TNG' // todo
+            dlvStatus.deviceId = 'PROXY' 
             dlvStatus.itemKey = item.itemKey
             dlvStatus.deliveryStatus = DeliveryStatusEnum.DELETED
             dlvStatus.type = ItemTypeEnum.CACHE

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrepareDeliveryReqDto, PrepareDeliveryResDto } from '@app/common/dto/delivery';
 import { ItemTypeEnum, PrepareStatusEnum } from '@app/common/database/entities';
-import { DeliveryEntity } from '@app/common/database-tng/entities';
+import { DeliveryEntity } from '@app/common/database-proxy/entities';
 import { HttpClientService } from './http-client.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
