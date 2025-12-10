@@ -153,6 +153,7 @@ export const GetMapTopics = {
     EXPORT_NOTIFICATION: `getapp-map.export.notify${region}`,
     // Inventory
     GET_INVENTORY_UPDATES: `getapp-map.inventory.updates${region}`,
+    GET_INVENTORY_UPDATES_V2: `getapp-map.inventory.updates.v2${region}`,
     // admin
     MAP_PUT: `getapp-map.put${region}`,
     // Device
@@ -176,6 +177,7 @@ export const DeviceTopics = {
     DEVICES_SOFTWARE_STATISTIC_INFO: `getapp-device.device.software.statistic.info${region}`,
     DEVICES_MAP_STATISTIC_INFO: `getapp-device.device.map.statistic.info${region}`,
     DEVICES_PUT: `getapp-device.put${region}`,
+    DELETE_DEVICE: `getapp-device.delete${region}`,
     DEVICE_MAPS: `getapp-device.device.maps${region}`,
     All_MAPS: `getapp-map.maps${region}`,
     GET_MAP: `getapp-map.map.id${region}`,

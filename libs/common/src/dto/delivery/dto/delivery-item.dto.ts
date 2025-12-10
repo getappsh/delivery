@@ -54,7 +54,7 @@ export class DeliveryItemDto {
   @ApiProperty({ required: false })
   isExecutable: boolean
   
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: String })
   arguments?: string | null
 
   toString() {
