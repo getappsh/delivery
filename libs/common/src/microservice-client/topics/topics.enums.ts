@@ -42,7 +42,8 @@ export const DeliveryTopics = {
     PREPARED_DELIVERY_STATUS: `getapp-delivery.prepared-status${region}`,
     GET_CACHE_CONFIG: `getapp-delivery.get-cache-config${region}`,
     SET_CACHE_CONFIG: `getapp-delivery.set-cache-config${region}`,
-    CHECK_HEALTH: `getapp-delivery.check-health${region}`
+    CHECK_HEALTH: `getapp-delivery.check-health${region}`,
+    GET_DELIVERY_STATUSES: `getapp-delivery.get-delivery-statuses${region}`,
 } as const
 
 export const DeliveryTopicsEmit = {
