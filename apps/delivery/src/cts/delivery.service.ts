@@ -35,7 +35,7 @@ export class DeliveryService {
     try {
       const release = await this.releaseRepo.findOne({
         where: { catalogId },
-        relations: { artifacts: {fileUpload: true}, dependencies: {artifacts: {fileUpload: true}} }, 
+        relations: { artifacts: { fileUpload: true }, dependencies: { artifacts: { fileUpload: true } } },
       });
 
       if (release) {
@@ -52,6 +52,10 @@ export class DeliveryService {
       if (map) {
         if (map.status == MapImportStatusEnum.DONE) {
           return await this.getMapPrepDlvRes(map, prepRes)
+        } else if (map.status == MapImportStatusEnum.EXPIRED || map.status == MapImportStatusEnum.ARCHIVED) {
+          const msg = `Catalog Id '${catalogId}' package is no longer available for delivery`
+          this.logger.warn(msg)
+          throw new DeliveryError(ErrorCode.DLV_DOWNLOAD_NOT_AVAILABLE, msg)
         } else {
           const msg = `Catalog Id '${catalogId}' package, not yet available for delivery`
           this.logger.warn(msg)
@@ -111,28 +115,28 @@ export class DeliveryService {
     const artifacts = []
     for (const art of release.artifacts) {
       if (!art.isInstallationFile) continue;
-      
+
       let compArtifacts = new DeliveryItemDto()
       compArtifacts.catalogId = dlvCatalogId;
       compArtifacts.id = art.id
       compArtifacts.metaData = JSON.stringify(art.metadata)
-      
-      if(art.type === ArtifactTypeEnum.DOCKER_IMAGE){
+
+      if (art.type === ArtifactTypeEnum.DOCKER_IMAGE) {
         compArtifacts.artifactType = AssetTypeEnum.DOCKER_IMAGE;
         compArtifacts.url = art.dockerImageUrl
         const imageName = art.dockerImageUrl.substring(art.dockerImageUrl.lastIndexOf("/") + 1);
         compArtifacts.itemKey = `${release.catalogId}@${imageName}`;
 
-      }else {
+      } else {
         compArtifacts.artifactType = ItemTypeEnum.SOFTWARE
         compArtifacts.size = art.fileUpload?.size;
         compArtifacts.url = await this.minioClient.generatePresignedDownloadUrl(this.bucketName, art.fileUpload.objectKey);
-        
+
         // Maybe change this to file type
         compArtifacts.itemKey = `${release.catalogId}@${art.fileUpload.fileName}`;
 
       }
-      artifacts.push(compArtifacts)      
+      artifacts.push(compArtifacts)
     }
 
     return artifacts
@@ -142,11 +146,11 @@ export class DeliveryService {
     prepRes.status = PrepareStatusEnum.DONE;
 
     const artifacts = await this.getArtifactsFromRelease(release, prepRes.catalogId);
-    for (let dep of release.dependencies){
+    for (let dep of release.dependencies) {
       const arts = await this.getArtifactsFromRelease(dep, prepRes.catalogId)
       artifacts.push(...arts)
     }
-    
+
     prepRes.Artifacts = artifacts
 
     return prepRes
@@ -160,10 +164,10 @@ export class DeliveryService {
     compArtifacts.size = comp.virtualSize
 
     let url
-    if (comp.assetType == AssetTypeEnum.DOCKER_IMAGE){
+    if (comp.assetType == AssetTypeEnum.DOCKER_IMAGE) {
       compArtifacts.metaData = AssetTypeEnum.DOCKER_IMAGE;
       url = comp.url
-    }else{
+    } else {
       compArtifacts.metaData = ItemTypeEnum.SOFTWARE
       url = await this.s3Service.generatePresignedUrlForDownload(comp.url)
     }
