@@ -22,7 +22,8 @@ export class HttpClientService {
       return (await this.httpService.axiosRef.get(url)).data;
     } catch (error) {
       if (error?.response?.status == 404) {
-        const inValidErr = new DeliveryError(ErrorCode.DLV_C_INVALID, error.message)
+        const msg = `The requested URL could not be found. It may be invalid, expired, or no longer accessible`
+        const inValidErr = new DeliveryError(ErrorCode.DLV_C_INVALID, msg)
         throw inValidErr
       } else {
         throw error
