@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrepareDeliveryReqDto, PrepareDeliveryResDto } from '@app/common/dto/delivery';
 import { ItemTypeEnum, PrepareStatusEnum } from '@app/common/database/entities';
+import { DeliveryError } from '@app/common/dto/delivery/dto/delivery-error';
+import { ErrorCode } from '@app/common/dto/error';
 import { DeliveryEntity } from '@app/common/database-tng/entities';
 import { HttpClientService } from './http-client.service';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,9 +24,12 @@ export class DeliveryService {
     try {
       return await this.getDeliveryArtifacts(dlv);
     } catch (err) {
-      let errMes = `Error Get Download Url for catalogId: ${dlv.catalogId}, ${err}`
+      if (err instanceof DeliveryError) {
+        throw err;
+      }
+      const errMes = `Error Get Download Url for catalogId: ${dlv.catalogId}, ${err}`;
       this.logger.error(errMes);
-      throw err
+      throw new DeliveryError(ErrorCode.DLV_OTHER, errMes);
     }
   }
 
@@ -49,7 +54,10 @@ export class DeliveryService {
     }
 
     if (prepRes.status == PrepareStatusEnum.ERROR) {
-      throw Error("Prepare status from server is Error");
+      const msg = prepRes.error?.message || `Prepare delivery failed with error status for catalogId: ${dlv.catalogId}`;
+      const errorCode = prepRes.error?.errorCode || ErrorCode.DLV_C_INVALID;
+      this.logger.error(msg);
+      throw new DeliveryError(errorCode, msg);
     }
 
     return PrepareDeliveryResDto.fromPrepareDeliveryResDto(prepRes);
