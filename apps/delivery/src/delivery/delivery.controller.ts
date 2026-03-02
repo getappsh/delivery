@@ -64,6 +64,17 @@ export class DeliveryController {
     return "Delivery service is success, Version: " + version
   }
 
+  @MessagePattern(DeliveryTopics.GET_DELIVERY_STATUSES)
+  async getDeliveryStatuses(@RpcPayload() data: any) {
+    this.logger.log(`Get delivery statuses for catalogId: ${data.catalogId}`);
+    try {
+      return await this.deliveryService.getDeliveryStatuses(data.catalogId);
+    } catch (error) {
+      this.logger.error(`Error getting delivery statuses: ${error.message}`);
+      return [];
+    }
+  }
+
   private readImageVersion() {
     let version = 'unknown'
     try {

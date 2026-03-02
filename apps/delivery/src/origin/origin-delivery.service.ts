@@ -35,7 +35,7 @@ export class DeliveryService {
     try {
       const release = await this.releaseRepo.findOne({
         where: { catalogId },
-        relations: { artifacts: {fileUpload: true}, dependencies: {artifacts: {fileUpload: true}} }, 
+        relations: { artifacts: {fileUpload: true} }, 
       });
 
       if (release) {
@@ -145,11 +145,7 @@ export class DeliveryService {
     prepRes.status = PrepareStatusEnum.DONE;
 
     const artifacts = await this.getArtifactsFromRelease(release, prepRes.catalogId);
-    for (let dep of release.dependencies){
-      const arts = await this.getArtifactsFromRelease(dep, prepRes.catalogId)
-      artifacts.push(...arts)
-    }
-    
+
     prepRes.Artifacts = artifacts
 
     return prepRes

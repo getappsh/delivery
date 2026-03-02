@@ -138,4 +138,20 @@ export class DeliveryService {
   setDeliveryCacheConfigs(config: CacheConfigDto) {
     return this.cacheMngService.setCacheConfig(config)
   }
+
+  // Get delivery statuses for a specific catalog
+  async getDeliveryStatuses(catalogId: string): Promise<DeliveryStatusEntity[]> {
+    this.logger.log(`Getting delivery statuses for catalogId: ${catalogId}`);
+    try {
+      const statuses = await this.deliveryStatusRepo.find({
+        where: { catalogId },
+        relations: ['device']
+      });
+      this.logger.debug(`Found ${statuses.length} delivery statuses for catalogId: ${catalogId}`);
+      return statuses;
+    } catch (error) {
+      this.logger.error(`Error getting delivery statuses for catalogId: ${catalogId}, error: ${error.message}`);
+      throw error;
+    }
+  }
 }
