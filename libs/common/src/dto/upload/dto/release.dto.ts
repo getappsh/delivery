@@ -228,7 +228,7 @@ export class ReleaseDto {
     dto.updatedBy = release.updatedBy ?? undefined;
     dto.isImported = release.isImported ?? false;
     // Readonly if it's imported AND released, but user doesn't have edit permission
-    dto.readonly = dto.isImported && release.status === ReleaseStatusEnum.RELEASED && !userCanEditImported;
+    dto.readonly = release.status === ReleaseStatusEnum.RELEASED && !userCanEditImported;
 
     return dto;
   }
@@ -282,6 +282,9 @@ export class ComponentV2Dto {
   version: string;
 
   @ApiProperty()
+  projectId: number;
+
+  @ApiProperty()
   projectName: string;
 
   @ApiProperty({ required: false })
@@ -313,7 +316,7 @@ export class ComponentV2Dto {
 
   @ApiProperty({ required: false, type: ComponentV2Dto, isArray: true })
   dependencies?: ComponentV2Dto[]
-
+  
   @ApiProperty({ required: false, type: [ReleasePolicyDto], description: 'Policies associated with this release' })
   policies?: ReleasePolicyDto[]
 
@@ -326,14 +329,21 @@ export class ComponentV2Dto {
     dto.status = release.status;
     dto.createdAt = release.createdAt;
     dto.updatedAt = release.updatedAt;
-    dto.projectName = release.project.name;
-    dto.type = release.project.projectType;
+    dto.projectId = release?.project?.id;
+    dto.projectName = release?.project?.name;
+    dto.type = release?.project?.projectType;
     dto.latest = release.latest;
     dto.releasedAt = release.releasedAt ?? undefined;
     dto.size = release?.artifacts
       ?.filter(a => a.isInstallationFile)
       ?.map(a => Number(a?.fileUpload?.size) || 0)
       ?.reduce((size, a) => size + a, 0);
+    
+    // Map dependencies recursively
+    if (release.dependencies && release.dependencies.length > 0) {
+      dto.dependencies = release.dependencies.map(dep => ComponentV2Dto.fromEntity(dep));
+    }
+    
     return dto;
   }
 
