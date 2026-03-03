@@ -311,6 +311,9 @@ export class ComponentV2Dto {
   @ApiProperty({ required: false })
   releasedAt?: Date
 
+  @ApiProperty({ required: false, type: ComponentV2Dto, isArray: true })
+  dependencies?: ComponentV2Dto[]
+
   @ApiProperty({ required: false, type: [ReleasePolicyDto], description: 'Policies associated with this release' })
   policies?: ReleasePolicyDto[]
 
