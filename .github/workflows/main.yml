@@ -3,8 +3,7 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - develop
-      - project-refactor
+      - maalot.1
 ##
 jobs:
   calculate_new_tag:
