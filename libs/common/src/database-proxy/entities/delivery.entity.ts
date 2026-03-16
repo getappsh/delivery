@@ -4,6 +4,7 @@ import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateC
 import { DeliveryItemEntity } from "./delivery-item.entity";
 import { PrepareStatusEnum } from "../../database/entities/enums.entity";
 import { Deprecated } from "../../decorators";
+import { StringNumberTransformer } from "../../database/entities/transformers/string-number.transformer";
 
 @Entity("delivery")
 export class DeliveryEntity {
@@ -48,7 +49,7 @@ export class DeliveryEntity {
   @Column({ name: "err_msg", nullable: true })
   errMsg: string;
 
-  @Column({ name: "size", nullable: true })
+  @Column({ name: "size", type: 'bigint', nullable: true, transformer: new StringNumberTransformer() })
   size: number;
 
   @OneToMany(() => DeliveryItemEntity, item => item.delivery)
