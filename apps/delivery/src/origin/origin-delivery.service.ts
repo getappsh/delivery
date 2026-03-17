@@ -128,7 +128,7 @@ export class DeliveryService {
 
       }else {
         compArtifacts.artifactType = ItemTypeEnum.SOFTWARE
-        compArtifacts.size = art.fileUpload?.size != null ? Number(art.fileUpload.size) : undefined;
+        compArtifacts.size = art.fileUpload?.size;
         compArtifacts.url = await this.minioClient.generatePresignedDownloadUrl(this.bucketName, art.fileUpload.objectKey);
         
         // Maybe change this to file type
