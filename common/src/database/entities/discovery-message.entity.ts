@@ -6,32 +6,42 @@ import { DeviceEntity } from "./device.entity";
 
 
 @Entity("discovery_message")
-export class DiscoveryMessageEntity extends BaseEntity{
+export class DiscoveryMessageEntity extends BaseEntity {
 
     @ManyToOne(() => DeviceEntity)
     @JoinColumn()
     device: DeviceEntity;
 
-    @Column('jsonb', {name: "personal_device", nullable: true})
-    personalDevice: any;
+    @Column('timestamptz', { name: "snap_shote" })
+    snapshotDate: Date;
 
-    @Column('jsonb', {name: "situational_device", nullable: true})
-    situationalDevice: any;
+    @ManyToOne(() => DeviceEntity, { nullable: true, onDelete: "SET NULL" })
+    @JoinColumn({ name: "report_dvc_id" })
+    reportingDevice?: DeviceEntity;
 
-    @Column('jsonb', {name: "discovery_data", nullable: true})
-    discoveryData: any;
+    @Column('jsonb', { name: "personal_device", nullable: true })
+    personalDevice?: any;
 
-    @Column({type: "enum", enum: DiscoveryType})
+    @Column('jsonb', { name: "situational_device", nullable: true })
+    situationalDevice?: any;
+    
+    @Column('jsonb', { name: "meta_data", nullable: true })
+    metaData?: any;
+
+    @Column('jsonb', { name: "discovery_data", nullable: true })
+    discoveryData?: any;
+
+    @Column({ type: "enum", enum: DiscoveryType })
     discoveryType: DiscoveryType;
 
-    @Column('jsonb', {name: "map", nullable: true})
-    map: any;
-    
-    @Column('text', {name: "mTls_status", nullable: true})
-    mTlsStatus: string;
+    @Column('jsonb', { name: "map", nullable: true })
+    map?: any;
 
-    toString(){
+    @Column('text', { name: "mTls_status", nullable: true })
+    mTlsStatus?: string;
+
+    toString() {
         return JSON.stringify(this)
     }
-    
+
 }

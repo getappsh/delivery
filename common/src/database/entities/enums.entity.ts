@@ -2,12 +2,14 @@ export enum OS {
     ANDROID = 'android',
     WINDOWS = 'windows',
     LINUX = 'linux',
+    MACOS = 'macos',
 }
 
 export enum Components {
     ANDROID = 'android',
     WINDOWS = 'windows',
     LINUX = 'linux',
+    MACOS = 'macos',
 }
 
 export enum Formation {
@@ -62,6 +64,7 @@ export enum PrepareStatusEnum {
     DONE = "done",
     ERROR = "error",
     DELETE = "delete",
+    PENDING = "pending",
 }
 
 export enum DeployStatusEnum {
@@ -82,13 +85,15 @@ export enum ItemTypeEnum {
 }
 
 export enum MapImportStatusEnum {
+    DRAFT = 'Draft',
+    PENDING = 'Pending',
     START = 'Start',
     IN_PROGRESS = 'InProgress',
-    DONE = 'Done',
-    CANCEL = 'Cancel',
     PAUSED = 'Pause',
+    CANCEL = 'Cancel',
     ERROR = 'Error',
-    PENDING = 'Pending',
+    DONE = 'Done',
+    DISCOVERED = 'Discovered',
     EXPIRED = 'Expired',
     ARCHIVED = 'Archived',
 }
@@ -114,17 +119,18 @@ export enum DeviceMapStateEnum {
     UNINSTALLED = "uninstalled"
 }
 
-export enum DeviceComponentStateEnum{
+export enum DeviceComponentStateEnum {
     OFFERING = "offering",
     PUSH = "push",
     DELIVERY = "delivery",
+    DOWNLOADED = "downloaded",
     DELETED = "deleted",
     DEPLOY = "deploy",
     INSTALLED = "installed",
-    UNINSTALLED = "uninstalled",
+    UNINSTALLED = "uninstalled"
 }
 
-export enum OfferingActionEnum{
+export enum OfferingActionEnum {
     OFFERING = "offering",
     PUSH = "push"
 }
@@ -138,4 +144,51 @@ export enum HashAlgorithmEnum {
 export enum AssetTypeEnum {
     ARTIFACT = "artifact",
     DOCKER_IMAGE = "docker_image"
+}
+
+export enum FileUPloadStatusEnum {
+    UPLOADED = "uploaded",
+    PENDING = "pending",
+    UPLOADING = "uploading",
+    REMOVED = "removed",
+    ERROR = "error"
+}
+
+export enum ReleaseStatusEnum {
+    DRAFT = 'draft',
+    IN_REVIEW = 'in_review',
+    APPROVED = 'approved',
+    RELEASED = 'released',
+    ARCHIVED = 'archived',
+}
+
+
+export enum ArtifactTypeEnum {
+    FILE = 'file',
+    DOCKER_IMAGE = 'docker_image',
+}
+
+export enum ProjectType {
+    PRODUCT = "product",
+    FORMATION = "formation",
+  }
+
+
+// PLATFORM TYPES
+export enum CPUArchitecture {
+  X86_64 = 'X86_64',
+  ARM64 = 'ARM64',
+}
+
+export enum DiskType {
+  HDD = 'HDD',
+  SSD = 'SSD',
+  NVME = 'NVME',
+}
+
+export enum NetworkType {
+  NAT = 'NAT',
+  BRIDGED = 'BRIDGED',
+  HOST_ONLY = 'HOST_ONLY',
+  CUSTOM = 'CUSTOM',
 }

@@ -11,12 +11,19 @@ export class ImportAttributes {
   private _polygon: Feature<Polygon>;
   private _area: number
   private _pointsString: string
+  imagingStartDate: Date
+  imagingEndDate: Date
   zoomLevel: number
   targetResolution: number
   minResolutionDeg: number
-  fileName: string
-  requestId: string
+  fileName?: string
+  requestId?: string
   jobId: string
+  miscellaneous: {
+    deviceId: string;
+    personalName: string;
+    [key: string]: string;
+  }
 
   toString() {
     return JSON.stringify(this);
@@ -78,6 +85,12 @@ export class ImportAttributes {
   static fromImportCreateDto(importDto: CreateImportDto): ImportAttributes {
     const attr = new ImportAttributes()
     attr.Points = importDto.mapProperties.boundingBox
+    attr.miscellaneous = {
+      deviceId: importDto.deviceId,
+      personalName: "",
+    }
+    attr.requestId = importDto.mapProperties.catalogId
+    attr.fileName = importDto.mapProperties.fileName
     return attr
   }
 

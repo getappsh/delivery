@@ -1,4 +1,4 @@
-import { DeliveryItemEntity } from "@app/common/database-tng/entities";
+import { DeliveryItemEntity } from "@app/common/database-proxy/entities";
 import { HashAlgorithmEnum } from "@app/common/database/entities/enums.entity";
 import { ApiProperty } from "@nestjs/swagger";
 import { IsOptional } from "class-validator";
@@ -24,9 +24,16 @@ export class HashDto {
 export class DeliveryItemDto {
   @ApiProperty()
   catalogId: string;
+  
+  // Maps with no cache has no id
+  @ApiProperty({required: false, type: 'integer'})
+  id?: number;
 
   @ApiProperty()
   itemKey: string;
+
+  @ApiProperty({required: false})
+  artifactType: string; 
 
   @ApiProperty({ required: false })
   metaData: string;
@@ -41,6 +48,15 @@ export class DeliveryItemDto {
   @IsOptional()
   hash: HashDto
 
+  @ApiProperty({ required: false })
+  signature?: string
+  
+  @ApiProperty({ required: false })
+  isExecutable: boolean
+  
+  @ApiProperty({ required: false, type: String })
+  arguments?: string | null
+
   toString() {
     return JSON.stringify(this);
   }
@@ -48,19 +64,31 @@ export class DeliveryItemDto {
   static fromDeliveryItemEntity(diE: DeliveryItemEntity): DeliveryItemDto {
     const dto = new DeliveryItemDto();
     dto.catalogId = diE.delivery.catalogId;
+    dto.id = diE.id;
     dto.itemKey = diE.itemKey;
     dto.metaData = diE.metaData;
     dto.url = diE.path;
     dto.size = diE.size;
+    dto.artifactType = diE.artifactType;
+    dto.signature = diE.signature;
+    dto.isExecutable = diE.isExecutable;
+    dto.arguments = diE.arguments;
+    
     return dto
   }
+  
   static fromDeliveryItemDto(diDto: DeliveryItemDto): DeliveryItemDto {
     const dto = new DeliveryItemDto();
     dto.catalogId = diDto.catalogId;
+    dto.id = diDto.id;
     dto.itemKey = diDto.itemKey;
     dto.metaData = diDto.metaData;
     dto.url = diDto.url;
     dto.size = diDto.size;
+    dto.artifactType = diDto.artifactType;
+    dto.signature = diDto.signature;
+    dto.isExecutable = diDto.isExecutable;
+    dto.arguments = diDto.arguments;
 
     if(diDto.hash){
       dto.hash = HashDto.fromHashDto(diDto.hash)

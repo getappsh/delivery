@@ -2,8 +2,9 @@
 import { DeviceConfigEntity } from "@app/common/database/entities/device-config.entity";
 import { BadRequestException, Injectable, PipeTransform } from "@nestjs/common";
 import { ApiProperty } from "@nestjs/swagger";
-import { Expose, plainToClass } from "class-transformer";
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, validate } from "class-validator";
+import { Expose, plainToClass, Type } from "class-transformer";
+import { IsArray, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, validate, ValidateNested, ValidationError } from "class-validator";
+import { LayersConfigDto } from "./layer-config.dto";
 
 
 export enum TargetStoragePolicy {
@@ -13,27 +14,23 @@ export enum TargetStoragePolicy {
   FLASH_ONLY = "FlashOnly"
 }
 
-export class BaseConfigDto{
+export class BaseConfigDto {
   @ApiProperty({ required: true })
   @IsString()
   @IsNotEmpty()
   @Expose()
   group: string
 
-
   @ApiProperty({ required: false })
   @IsOptional()
   @Expose()
   lastConfigUpdateDate: Date
 
-  
   @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   @Expose()
   minAvailableSpaceMB: number
-
-
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -41,25 +38,22 @@ export class BaseConfigDto{
   @Expose()
   periodicInventoryIntervalMins: number
 
-
   @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   @Expose()
   periodicConfIntervalMins: number
 
-
   @ApiProperty({ required: false })
+  @IsOptional()
   @IsNumber()
   @Expose()
   periodicMatomoIntervalMins: number
-
 
   @ApiProperty({ required: false })
   @IsOptional()
   @Expose()
   lastCheckingMapUpdatesDate: Date
-
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -96,42 +90,140 @@ export class BaseConfigDto{
   @IsNumber()
   @Expose()
   downloadTimeoutMins: number
-  
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   @Expose()
   mapMinInclusionInPercentages: number
-  
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @Expose()
   matomoUrl: string
-  
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @Expose()
   matomoDimensionId: string
-  
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @Expose()
   matomoSiteId: string
-
 }
 
 
 export class WindowsConfigDto extends BaseConfigDto{
 
-  constructor(){
+  @ApiProperty({ required: false, type: [LayersConfigDto] })
+  @IsOptional()
+  @ValidateNested()
+  @IsArray()
+  @Type(() => LayersConfigDto)
+  @Expose()
+  layers?: LayersConfigDto[];
+
+  @ApiProperty({ required: false, type: String, isArray: true })
+  @IsOptional()
+  @Expose()
+  getAppServerUrls?: string[] | { url: string, delete: boolean };
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @Expose()
+  mapsStoragePath: string
+
+
+  @ApiProperty({ required: false, type: 'integer', description: 'How many seconds to wait between checking the import and prepare status', })
+  @IsOptional()
+  @IsInt()
+  @Expose()
+  queryStatusIntervalSec: number
+
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @Expose()
+  networkAvailabilityUrl: string
+
+  @ApiProperty({ required: false, type: 'integer' })
+  @IsOptional()
+  @IsInt()
+  @Expose()
+  periodicDiscoveryIntervalMins: number
+
+
+  @ApiProperty({ required: false, type: 'integer', description: 'Interval for background network status checks in minutes. Used when maps are in the import process.' })
+  @IsOptional()
+  @IsInt()
+  @Expose()
+  networkStatusIntervalMins: number
+
+
+  @ApiProperty({ required: false, type: 'integer', description: 'Maximum allowed interval (in hours) for inventory updates before triggering an error.' })
+  @IsOptional()
+  @IsNumber()
+  @Expose()
+  maxInventoryMissedIntervalHours: number
+
+
+  @ApiProperty({ required: false, type: 'integer' })
+  @IsOptional()
+  @IsInt()
+  @Expose()
+  mapInventoryMaxSizeMB: number
+
+  @ApiProperty({
+    required: false,
+    type: 'integer',
+    description: 'Maximum time (in seconds) to wait for a response when checking if a TCP connection is valid. If no response is received within this time, an error is returned.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Expose()
+  tcpStreamTimeoutSec: number;
+
+  @ApiProperty({
+    required: false,
+    type: 'integer',
+    description: 'Maximum retention time for Matomo data in hours. Data older than this will be cleaned up.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Expose()
+  matomoMaxRetentionHour: number;
+
+  @ApiProperty({
+    required: false,
+    type: 'integer',
+    description: 'Maximum buffer size in megabytes. If the buffer limit is reached, the oldest entries will be discarded to free up space.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Expose()
+  matomoMaxBufferSizeMB: number;
+
+
+  @ApiProperty({ required: false, description: 'The password that allows a technician to modify configurations directly on the device. Must be between 4 and 20 characters.', minLength: 4, maxLength: 20 })
+  @MinLength(4)
+  @MaxLength(20)
+  @IsOptional()
+  @IsString()
+  @Expose()
+  technicianPassword: string
+
+  constructor() {
     super();
     this.group = 'windows'
   }
 
-  static fromConfigEntity(eConfig: DeviceConfigEntity): WindowsConfigDto{
+  static fromConfigEntity(eConfig: DeviceConfigEntity): WindowsConfigDto {
     let config = new WindowsConfigDto();
     config.group = eConfig.group;
     for (const key in eConfig.data) {
@@ -146,13 +238,13 @@ export class WindowsConfigDto extends BaseConfigDto{
 
 }
 
-export class AndroidConfigDto extends BaseConfigDto{
+export class AndroidConfigDto extends BaseConfigDto {
 
-  constructor(){
+  constructor() {
     super();
     this.group = 'android'
   }
- 
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
@@ -164,8 +256,8 @@ export class AndroidConfigDto extends BaseConfigDto{
   @IsString()
   @Expose()
   flashStoragePath: string
-  
-  @ApiProperty({enum: TargetStoragePolicy, required: false, default: TargetStoragePolicy.SD_ONLY})
+
+  @ApiProperty({ enum: TargetStoragePolicy, required: false, default: TargetStoragePolicy.SD_ONLY })
   @IsOptional()
   @IsEnum(TargetStoragePolicy)
   @Expose()
@@ -195,6 +287,18 @@ export class AndroidConfigDto extends BaseConfigDto{
   @IsString()
   @Expose()
   controlMapPath: string
+  
+  @ApiProperty({ required: false, description: 'Substring to match in ortophoto map filename' })
+  @IsOptional()
+  @IsString()
+  @Expose()
+  ortophotoMapPattern?: string
+  
+  @ApiProperty({ required: false, description: 'Substring to match in control map filename' })
+  @IsOptional()
+  @IsString()
+  @Expose()
+  controlMapPattern?: string
 
   static fromConfigEntity(cE: DeviceConfigEntity) {
     const config = new AndroidConfigDto()
@@ -212,44 +316,62 @@ export class AndroidConfigDto extends BaseConfigDto{
 
 
 
-export function fromConfigEntity(eConfig: DeviceConfigEntity): AndroidConfigDto | WindowsConfigDto{
+export function fromConfigEntity(eConfig: DeviceConfigEntity): AndroidConfigDto | WindowsConfigDto {
   let config: AndroidConfigDto | WindowsConfigDto;
-  if (eConfig.group === 'android'){
-      config = new AndroidConfigDto();
-  }else {
+  if (eConfig.group === 'android') {
+    config = new AndroidConfigDto();
+  } else {
     config = new WindowsConfigDto();
-  }  
-  config.lastConfigUpdateDate = eConfig.lastUpdatedDate;
+  }
   for (const key in eConfig.data) {
     config[key] = eConfig.data[key];
   }
+  config.lastConfigUpdateDate = eConfig.lastUpdatedDate;
   return config;
 }
 
 
 @Injectable()
 export class DeviceConfigValidator implements PipeTransform {
-  async transform(value: any) {
 
-    const base = plainToClass(BaseConfigDto, {...value});
-    const baseErrors = await validate(base);
-    if (baseErrors.length !== 0) {
-      throw new BadRequestException('Validation failed');
+  getErrorMes(errors: ValidationError[]): string[] {
+    const messages: string[] = [];
+
+    function collectConstraints(error: ValidationError) {
+      if (error.constraints) {
+        messages.push(...Object.values(error.constraints));
+      }
+      if (error.children) {
+        error.children.forEach(collectConstraints); // Recursively process child errors
+      }
     }
 
-    if (base.group === 'windows'){
-      const windows = plainToClass(WindowsConfigDto, value, { excludeExtraneousValues: true , exposeUnsetFields: false});
+    errors.forEach(collectConstraints);
+    return messages;
+  }
+
+
+  async transform(value: AndroidConfigDto | WindowsConfigDto | BaseConfigDto) {
+
+    const base = plainToClass(BaseConfigDto, { ...value });
+    const baseErrors = await validate(base);
+
+    if (baseErrors.length !== 0) {
+      throw new BadRequestException(Object.values(baseErrors[0].constraints ?? {}));
+    }
+
+    if (base.group === 'windows') {
+      const windows = plainToClass(WindowsConfigDto, value, { excludeExtraneousValues: true, exposeUnsetFields: false });
       const errors = await validate(windows);
       if (errors.length !== 0) {
-        throw new BadRequestException('Validation failed');
+        throw new BadRequestException(this.getErrorMes(errors));
       }
       return windows
-    }else {
-      const android = plainToClass(AndroidConfigDto, value, { excludeExtraneousValues: true , exposeUnsetFields: false});
-
+    } else {
+      const android = plainToClass(AndroidConfigDto, value, { excludeExtraneousValues: true, exposeUnsetFields: false });
       const errors = await validate(android);
       if (errors.length !== 0) {
-        throw new BadRequestException('Validation failed');
+        throw new BadRequestException(Object.values(errors[0].constraints ?? {}));
       }
       return android
     }

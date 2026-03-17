@@ -1,8 +1,9 @@
 import { DeviceEntity, DeviceMapStateEnum, DiscoveryMessageEntity } from "@app/common/database/entities";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsString } from "class-validator";
+import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { DeviceDto } from "./device.dto";
 import { MapStateDto } from "../../map/dto/map-state.dto";
+import { Type } from "class-transformer";
 
 export class DeviceMapDto extends DeviceDto {
 
@@ -10,7 +11,7 @@ export class DeviceMapDto extends DeviceDto {
   @IsNotEmpty()
   maps: MapStateDto[];
 
-  static fromDeviceMapEntity(dme: DeviceEntity, discoveryE: DiscoveryMessageEntity): DeviceMapDto {
+  static fromDeviceMapEntity(dme: DeviceEntity, discoveryE?: DiscoveryMessageEntity): DeviceMapDto {
     if(!dme.maps){
       throw new Error("device entity must have a maps property")
     }
@@ -43,6 +44,24 @@ export class DeviceMapStateDto{
   @IsEnum(DeviceMapStateEnum)
   state: DeviceMapStateEnum;
 
+  @ApiProperty({required: false})
+  @IsOptional()
+  @IsString()
+  error?: string
+
+  @ApiProperty({required: false})
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  downloadedAt?: Date;
+
+  @ApiProperty({required: false})
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  deployedAt?: Date;
+
+  
   toString(){
     return JSON.stringify(this);
   }

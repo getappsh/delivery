@@ -13,9 +13,9 @@ export const deliveryStatusEntityStub = (): DeliveryStatusEntity => {
     downloadStop: null,
     bitNumber: 103100,
     downloadSpeed: 3.212,
-    downloadData: 56.901,
+    progress: 56.901,
     downloadEstimateTime: 343,
     currentTime: null,
-  } as DeliveryStatusEntity
+  } as unknown as DeliveryStatusEntity
 
 };

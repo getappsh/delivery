@@ -1,45 +1,68 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from "typeorm";
+import { Column, Entity, Index, JoinTable, ManyToMany, OneToMany, ManyToOne, JoinColumn } from "typeorm";
 import { BaseEntity } from "./base.entity";
 import { MemberProjectEntity } from "./member_project.entity";
-import { CategoryEntity, FormationEntity, OperationSystemEntity, PlatformEntity } from "./project-types";
-
+import { RegulationEntity } from "./regulation.entity";
+import { ReleaseEntity } from "./release.entity";
+import { ProjectTokenEntity } from "./project-token.entity";
+import { DocEntity } from "./document.entity";
+import { ProjectType } from "./enums.entity";
+import { DeviceTypeEntity } from "./device-type.entity";
+import { PlatformEntity } from "./platform.entity";
+import { LabelEntity } from "./label.entity";
 
 @Entity("project")
-export class ProjectEntity extends BaseEntity{
-    
-    @Index("project_component_name_unique_constraint", {unique: true})
-    @Column({name: "component_name"})
-    componentName: string;
+export class ProjectEntity extends BaseEntity {
 
-    @ManyToOne(() => OperationSystemEntity, OS => OS.name)
-    @JoinColumn({name: "OS"})
-    OS: OperationSystemEntity;
+    @Index("project_name_unique_constraint", { unique: true })
+    @Column({ name: "name" })
+    name: string;
 
-    @ManyToOne(() => PlatformEntity, platformType => platformType.name)
-    @JoinColumn({name: "platform_type"})
-    platformType: PlatformEntity;
+    @Column({ name: "project_name", nullable: true })
+    projectName?: string;
 
-    @ManyToOne(() => FormationEntity, formation => formation.name)
-    @JoinColumn({name: "formation"})
-    formation: FormationEntity;
+    // needs to be nullable
+    @Column({ name: "description", nullable: true })
+    description?: string;
 
-    @Column({name: "artifact_type", default: null})
-    artifactType: string;
+    @OneToMany(() => ProjectTokenEntity, (token) => token.project)
+    tokens: ProjectTokenEntity[];
 
-    @ManyToOne(() => CategoryEntity, category => category.name)
-    @JoinColumn({name: "category"})
-    category: CategoryEntity;
 
-    @Column({name: "description"})
-    description: string
-    
-    @Column('simple-array', {name: "tokens", nullable: true})
-    tokens: string[]
-   
-    @OneToMany(() => MemberProjectEntity, memberProject => memberProject)
+    @ManyToMany(() => PlatformEntity, { eager: true })
+    @JoinTable({
+        name: "project_platforms",
+        joinColumn: { name: "project_id", referencedColumnName: "id" },
+        inverseJoinColumn: { name: "platform_name", referencedColumnName: "name" },
+    })
+    platforms: PlatformEntity[];
+
+    @OneToMany(() => RegulationEntity, regulation => regulation.project)
+    regulations: RegulationEntity[]
+
+    @OneToMany(() => MemberProjectEntity, memberProject => memberProject.project)
     memberProject: MemberProjectEntity[];
 
-    toString(){
+    @OneToMany(() => ReleaseEntity, release => release.project)
+    releases: ReleaseEntity[];
+
+    @Column({ type: "jsonb", nullable: true, name: "project_summary", default: {} })
+    projectSummary: Record<string, any>;
+
+
+    @OneToMany(() => DocEntity, (doc) => doc.project, { lazy: true })
+    docs: Promise<DocEntity[]>;
+
+    @Column({ name: "project_type", type: "enum", enum: ProjectType, default: ProjectType.PRODUCT })
+    projectType: ProjectType;
+
+    @ManyToMany(() => DeviceTypeEntity, deviceType => deviceType.projects)
+    deviceTypes: DeviceTypeEntity[];
+
+    @ManyToOne(() => LabelEntity, label => label.projects, { nullable: true })
+    @JoinColumn({ name: "label_id" })
+    label: LabelEntity | null;
+
+    toString() {
         return JSON.stringify(this)
     }
 }
