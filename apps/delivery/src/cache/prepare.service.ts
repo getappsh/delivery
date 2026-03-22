@@ -28,7 +28,7 @@ export class PrepareService {
     private readonly s3Service: S3Service,
     @InjectRepository(DeliveryEntity) private readonly deliveryRepo: Repository<DeliveryEntity>,
     @InjectRepository(DeliveryItemEntity) private readonly deliveryItemRepo: Repository<DeliveryItemEntity>,
-  ) { 
+  ) {
 
     this.HARBOR_CACHE_REGISTRY_URL = this.configService.get<string>('HARBOR_CACHE_REGISTRY_URL');
     this.logger.log(`HARBOR_CACHE_REGISTRY_URL: ${this.HARBOR_CACHE_REGISTRY_URL}`);
@@ -71,6 +71,11 @@ export class PrepareService {
         res.status = PrepareStatusEnum.START;
         this.startDeliveryIfStooped(dlv, dlvSrcFn);
         break;
+
+      // case PrepareStatusEnum.PENDING:
+      //   res.status = PrepareStatusEnum.PENDING;
+      //   // TODO startGetStatusIfStooped
+      //   break;
 
       case PrepareStatusEnum.DONE:
         await this.getPreparedDeliveryDone(res, dlv)
@@ -261,7 +266,7 @@ export class PrepareService {
     }
 
     let path;
-    if (art.artifactType == ArtifactTypeEnum.DOCKER_IMAGE){
+    if (art.artifactType == ArtifactTypeEnum.DOCKER_IMAGE) {
       const registry_url = this.HARBOR_CACHE_REGISTRY_URL
       path = `${registry_url}/${art.url.substring(art.url.indexOf('/') + 1)}`;
       dlvItem.path = path
