@@ -34,9 +34,14 @@ export class DeliveryService {
     prepReq.catalogId = dlv.catalogId;
     prepReq.deviceId = this.config.get("SERVER_NAME") || "delivery-proxy";
     prepReq.itemType = ItemTypeEnum.CACHE;
-
+  
     let prepRes = await this.httpService.apiPrepareDelivery(prepReq);
     if (prepRes.status == PrepareStatusEnum.IN_PROGRESS || prepRes.status == PrepareStatusEnum.START) {
+      // dlv.status = PrepareStatusEnum.PENDING;
+      dlv.progress = prepRes.progress;
+      dlv.lastUpdatedDate = new Date();
+      await this.deliveryRepo.save(dlv);
+
       do {
         /**
          * TODO: if status is in progress, is needed the update dlv status to pending, (needed to add pending option in @Params PrepareStatusEnum)
@@ -44,6 +49,7 @@ export class DeliveryService {
         await new Promise(resolve => setTimeout(resolve, 2000));
         prepRes = await this.httpService.apiGetPreparedDelivery(dlv.catalogId);
         dlv.lastUpdatedDate = new Date()
+        dlv.progress = prepRes.progress;
         this.deliveryRepo.save(dlv)
       } while (prepRes.status == PrepareStatusEnum.IN_PROGRESS || prepRes.status == PrepareStatusEnum.START);
     }
