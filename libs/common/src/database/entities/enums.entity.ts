@@ -166,6 +166,8 @@ export enum ReleaseStatusEnum {
 export enum ArtifactTypeEnum {
     FILE = 'file',
     DOCKER_IMAGE = 'docker_image',
+    RPM = 'rpm',
+    DEB = 'deb',
 }
 
 export enum ProjectType {
