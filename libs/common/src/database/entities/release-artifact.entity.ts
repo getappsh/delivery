@@ -47,4 +47,7 @@ export class ReleaseArtifactEntity extends BaseEntity {
   @Column({ name: 'enable_sbom_scan', type: 'boolean', default: false })
   enableSbomScan: boolean;
 
+  @Column({ name: 'package_version', type: 'varchar', nullable: true, default: null })
+  packageVersion?: string | null;
+
 }

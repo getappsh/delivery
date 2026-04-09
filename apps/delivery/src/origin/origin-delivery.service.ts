@@ -131,7 +131,7 @@ export class DeliveryService {
         // Send the package name and version to the agent so it can install via yum/apt.
         compArtifacts.artifactType = art.type; // 'rpm' or 'deb'
         compArtifacts.itemKey = `${release.catalogId}@${art.artifactName}`;
-        compArtifacts.metaData = JSON.stringify({ ...art.metadata, packageVersion: art.packageVersion });
+        compArtifacts.metaData = JSON.stringify({ ...art.metadata,packageName: art.artifactName, packageVersion: art.packageVersion });
         compArtifacts.url = `${art.type}://${art.artifactName}`; // agent resolves from its configured yum/apt repository
 
       }else {
