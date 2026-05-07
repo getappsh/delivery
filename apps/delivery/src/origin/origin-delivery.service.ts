@@ -126,6 +126,14 @@ export class DeliveryService {
         const imageName = art.dockerImageUrl.substring(art.dockerImageUrl.lastIndexOf("/") + 1);
         compArtifacts.itemKey = `${release.catalogId}@${imageName}`;
 
+      } else if (art.type === ArtifactTypeEnum.RPM || art.type === ArtifactTypeEnum.DEB) {
+        // Package artifacts are served from the yum/apt repository.
+        // Send the package name and version to the agent so it can install via yum/apt.
+        compArtifacts.artifactType = art.type; // 'rpm' or 'deb'
+        compArtifacts.itemKey = `${release.catalogId}@${art.artifactName}`;
+        compArtifacts.metaData = JSON.stringify({ ...art.metadata,packageName: art.artifactName, packageVersion: art.packageVersion });
+        compArtifacts.url = `${art.type}://${art.artifactName}`; // agent resolves from its configured yum/apt repository
+
       }else {
         compArtifacts.artifactType = ItemTypeEnum.SOFTWARE
         compArtifacts.size = art.fileUpload?.size;
