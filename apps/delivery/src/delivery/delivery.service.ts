@@ -92,8 +92,20 @@ export class DeliveryService {
       }
       return isSaved
     }
-    this.logger.error(`Not found Item with this catalogId: ${dlvStatus.catalogId}`);
-    throw new BadRequestException(`Not found Item with this catalogId: ${dlvStatus.catalogId}`);
+    // TEMPORARY SOLUTION — GetMap proxy delivery status tracking
+    // When maps are delivered via GetMap server proxy (GETMAP_SERVER_URL),
+    // the catalogId exists only on the remote GetMap server's DB.
+    // The device reports download status to this server, but we can't
+    // find the catalogId in our releases/maps tables — so we skip gracefully.
+    //
+    // RISK: This also silently ignores truly invalid/typo catalogIds.
+    //
+    // TODO: When merging GetMap into GetApp (removing the proxy):
+    // 1. Revert this to throw BadRequestException (original behavior)
+    // 2. Remove the GETMAP_SERVER_URL proxy flow entirely
+    // 3. All catalogIds will exist locally — no need for this workaround
+    this.logger.warn(`CatalogId not found locally, skipping status update: ${dlvStatus.catalogId}`);
+    return true;
   }
 
   private async upsertDownloadStatus(newStatus: DeliveryStatusEntity): Promise<Boolean> {

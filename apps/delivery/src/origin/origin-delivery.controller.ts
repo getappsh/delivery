@@ -28,10 +28,10 @@ export class DeliveryController {
     this.logger.log(`Prepare delivery for catalogId: ${preDlv.catalogId}`)
     if (this.useCache) {
       return this.prepareService.prepareDelivery(preDlv, async (dlv: DeliveryEntity) => {
-        return await this.deliveryService.prepareDeliveryV2(dlv.catalogId)
+        return await this.deliveryService.prepareDeliveryV2(dlv.catalogId, preDlv.deviceId, preDlv.itemType as string)
       });
     }
-    const res = await this.deliveryService.prepareDeliveryV2(preDlv.catalogId);
+    const res = await this.deliveryService.prepareDeliveryV2(preDlv.catalogId, preDlv.deviceId, preDlv.itemType as string);
     return res;
 
   }
