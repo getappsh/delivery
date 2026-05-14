@@ -29,7 +29,7 @@ export class DeliveryService {
   ) { }
 
 
-  async prepareDeliveryV2(catalogId: string, deviceId?: string, itemType?: string): Promise<PrepareDeliveryResDto> {
+  async prepareDeliveryV2(catalogId: string): Promise<PrepareDeliveryResDto> {
     let prepRes = new PrepareDeliveryResDto()
     prepRes.catalogId = catalogId;
     try {
@@ -64,7 +64,7 @@ export class DeliveryService {
       // TODO: Remove once GetMap is fully integrated into GetApp server.
       if (this.httpService.isGetmapFallbackEnabled) {
         this.logger.log(`Item not found locally, trying GetMap server for catalogId: ${catalogId}`);
-        return await this.getmapDeliveryFallback(catalogId, deviceId, itemType);
+        return await this.getmapDeliveryFallback(catalogId);
       }
 
       const msg = `Item not found, catalog Id: ${catalogId}`
@@ -122,11 +122,12 @@ export class DeliveryService {
    * is not found in the local DB (neither releases nor maps).
    * Polls the GetMap server until the delivery is ready (DONE/ERROR).
    *
-   * TODO: Remove once GetMap is fully integrated into GetApp server.
+   * TODO: Remove once GetMap is fully integrated — delivery should ask the
+   * get-map microservice directly via Kafka topic for the delivery object.
    */
-  private async getmapDeliveryFallback(catalogId: string, deviceId?: string, itemType?: string): Promise<PrepareDeliveryResDto> {
+  private async getmapDeliveryFallback(catalogId: string): Promise<PrepareDeliveryResDto> {
     try {
-      let res = await this.httpService.getmapPrepareDelivery(catalogId, deviceId || 'getapp-proxy', itemType || 'map');
+      let res = await this.httpService.getmapPrepareDelivery(catalogId, 'getapp-server', 'map');
 
       while (res.status === PrepareStatusEnum.START || res.status === PrepareStatusEnum.IN_PROGRESS) {
         await new Promise(resolve => setTimeout(resolve, 2000));
