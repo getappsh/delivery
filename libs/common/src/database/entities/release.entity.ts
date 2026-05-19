@@ -3,6 +3,7 @@ import { ProjectEntity } from './project.entity';
 import { ReleaseArtifactEntity } from './release-artifact.entity';
 import { ReleaseStatusEnum } from './enums.entity';
 import { DeviceComponentEntity } from './device-component-state.entity';
+import { DeviceEntity } from './device.entity';
 
 @Entity('release')
 @Index(['project', 'version'], { unique: true })
@@ -25,7 +26,7 @@ export class ReleaseEntity {
   @Column({ name: 'metadata', type: 'jsonb', default: {} })
   metadata: Record<string, any>;
 
-  @ManyToOne(() => ProjectEntity, (project) => project.releases, {nullable: false})
+  @ManyToOne(() => ProjectEntity, (project) => project.releases, { nullable: false })
   @JoinColumn({ name: 'project_id' })
   project: ProjectEntity;
 
@@ -47,13 +48,22 @@ export class ReleaseEntity {
   @Column({ name: 'released_at', type: 'timestamptz', nullable: true })
   releasedAt: Date | null;
 
-  @ManyToMany(() => ReleaseEntity, (release) => release.dependentReleases, { cascade: true })
+  @ManyToMany(() => ReleaseEntity, (release) => release.dependentReleases)
   @JoinTable({
     name: 'release_dependencies',
-    joinColumn: { name: 'release_id', referencedColumnName: 'catalogId' },
-    inverseJoinColumn: { name: 'dependency_release_id', referencedColumnName: 'catalogId' },
+    joinColumn: {
+      name: 'release_id',
+      referencedColumnName: 'catalogId',
+    },
+    inverseJoinColumn: {
+      name: 'dependency_release_id',
+      referencedColumnName: 'catalogId',
+    },
   })
   dependencies: ReleaseEntity[];
+
+  @ManyToMany(() => ReleaseEntity, (release) => release.dependencies)
+  dependentReleases: ReleaseEntity[];
 
 
   @Column({ name: 'sort_order', type: 'int', default: 0 })
@@ -62,10 +72,6 @@ export class ReleaseEntity {
   @Column({ name: 'latest', type: 'boolean', default: false })
   latest: boolean
 
-  @ManyToMany(() => ReleaseEntity, (release) => release.dependencies)
-  dependentReleases: ReleaseEntity[];
-
-
-  @OneToMany(() => DeviceComponentEntity, deviceCompEntity => deviceCompEntity.release)
-  devices: DeviceComponentEntity[]
+  @ManyToMany(() => DeviceEntity, device => device.releases)
+  devices: DeviceEntity[];
 }

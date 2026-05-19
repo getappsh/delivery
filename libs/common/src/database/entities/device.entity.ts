@@ -42,9 +42,13 @@ export class DeviceEntity {
   @Column({ name: 'available_storage', nullable: true })
   availableStorage: string
 
-  @ManyToMany(() => ReleaseEntity, releaseEntity => releaseEntity.devices, {
-    cascade: true
+  @ManyToMany(() => ReleaseEntity, release => release.devices)
+  @JoinTable({
+    name: "device_releases",
+    joinColumn: { name: "device_id", referencedColumnName: "ID" },
+    inverseJoinColumn: { name: "release_catalog_id", referencedColumnName: "catalogId" },
   })
+  releases: ReleaseEntity[];
 
   @OneToMany(() => DeviceComponentEntity, deviceComp => deviceComp.device, { cascade: true })
   components: DeviceComponentEntity[];
@@ -57,13 +61,13 @@ export class DeviceEntity {
 
   @ManyToMany(() => PlatformEntity, { eager: true })
   @JoinTable({
-      name: "device_platforms",
-      joinColumn: { name: "device_ID", referencedColumnName: "ID" },
-      inverseJoinColumn: { name: "platform_name", referencedColumnName: "name" },
+    name: "device_platforms",
+    joinColumn: { name: "device_ID", referencedColumnName: "ID" },
+    inverseJoinColumn: { name: "platform_name", referencedColumnName: "name" },
   })
   platforms: PlatformEntity[];
 
-  @Column("text", {name: "formations", array: true, nullable: true})
+  @Column("text", { name: "formations", array: true, nullable: true })
   formations: string[];
 
 }
