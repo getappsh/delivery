@@ -10,11 +10,17 @@ import { MicroserviceClient, MicroserviceName } from '@app/common/microservice-c
 import { DeviceTopicsEmit } from '@app/common/microservice-client/topics';
 import { DeviceComponentStateDto } from '@app/common/dto/device/dto/device-software.dto';
 import { DeviceMapStateDto } from '@app/common/dto/device';
+import { ConfigService } from '@nestjs/config';
+import axios, { AxiosInstance } from 'axios';
 
 @Injectable()
 export class DeliveryService {
 
   private readonly logger = new Logger(DeliveryService.name);
+  // TEMPORARY: GetMap HTTP client for forwarding download status updates.
+  // TODO: Remove once GetMap is fully integrated — delivery will ask
+  // get-map microservice directly via Kafka topic.
+  private getmapClient: AxiosInstance | null = null;
 
   constructor(
     private readonly cacheMngService: ManagementService,
@@ -23,7 +29,18 @@ export class DeliveryService {
     @InjectRepository(DeviceEntity) private readonly deviceRepo: Repository<DeviceEntity>,
     @InjectRepository(MapEntity) private readonly mapRepo: Repository<MapEntity>,
     @Inject(MicroserviceName.DISCOVERY_SERVICE) private readonly deviceClient: MicroserviceClient,
-  ) { }
+    configService: ConfigService,
+  ) {
+    const getmapServerUrl = configService.get<string>("GETMAP_SERVER_URL");
+    if (getmapServerUrl) {
+      const deviceSecret = configService.get<string>("DEVICE_SECRET");
+      this.getmapClient = axios.create({
+        baseURL: getmapServerUrl,
+        timeout: 10000,
+        headers: deviceSecret ? { "device-auth": deviceSecret } : {},
+      });
+    }
+  }
 
   async updateDownloadStatus(dlvStatus: DeliveryStatusDto) {
     const newStatus = this.deliveryStatusRepo.create(dlvStatus);
@@ -91,6 +108,25 @@ export class DeliveryService {
         this.deviceClient.emit(DeviceTopicsEmit.UPDATE_DEVICE_MAP_STATE, deviceState);
       }
       return isSaved
+    }
+    // TEMPORARY SOLUTION — GetMap proxy delivery status tracking
+    // When maps are delivered via GetMap server proxy (GETMAP_SERVER_URL),
+    // the catalogId exists only on the remote GetMap server's DB.
+    // Forward the status update to GetMap server so they can track it.
+    //
+    // TODO: When merging GetMap into GetApp (removing the proxy):
+    // 1. Revert this to throw BadRequestException (original behavior)
+    // 2. Remove the GETMAP_SERVER_URL proxy flow entirely
+    // 3. All catalogIds will exist locally — no need for this workaround
+    if (this.getmapClient) {
+      this.logger.log(`CatalogId not found locally, forwarding status update to GetMap server: ${dlvStatus.catalogId}`);
+      try {
+        await this.getmapClient.post('/api/v1/delivery/updateDownloadStatus', dlvStatus);
+        return true;
+      } catch (error: any) {
+        this.logger.warn(`Failed to forward status update to GetMap server: ${error.message}`);
+        return true;
+      }
     }
     this.logger.error(`Not found Item with this catalogId: ${dlvStatus.catalogId}`);
     throw new BadRequestException(`Not found Item with this catalogId: ${dlvStatus.catalogId}`);

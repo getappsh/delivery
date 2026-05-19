@@ -59,6 +59,14 @@ export class DeliveryService {
         }
       }
 
+      // TEMPORARY: Not found locally — try GetMap server if configured.
+      // Needed while maps are stored in GetMap's DB/MinIO, not in GetApp's.
+      // TODO: Remove once GetMap is fully integrated into GetApp server.
+      if (this.httpService.isGetmapFallbackEnabled) {
+        this.logger.log(`Item not found locally, trying GetMap server for catalogId: ${catalogId}`);
+        return await this.getmapDeliveryFallback(catalogId);
+      }
+
       const msg = `Item not found, catalog Id: ${catalogId}`
       throw new DeliveryError(ErrorCode.DLV_NOT_FOUND, msg)
     } catch (error) {
@@ -105,6 +113,43 @@ export class DeliveryService {
     prepRes.Artifacts = [geoArtifacts, jsonArtifacts];
 
     return prepRes
+  }
+
+  /**
+   * TEMPORARY SOLUTION — Serving GetMap through GetApp.
+   *
+   * Fallback: forward prepareDelivery to the GetMap server when the catalogId
+   * is not found in the local DB (neither releases nor maps).
+   * Polls the GetMap server until the delivery is ready (DONE/ERROR).
+   *
+   * TODO: Remove once GetMap is fully integrated — delivery should ask the
+   * get-map microservice directly via Kafka topic for the delivery object.
+   */
+  private async getmapDeliveryFallback(catalogId: string): Promise<PrepareDeliveryResDto> {
+    try {
+      let res = await this.httpService.getmapPrepareDelivery(catalogId, 'getapp-server', 'map');
+
+      while (res.status === PrepareStatusEnum.START || res.status === PrepareStatusEnum.IN_PROGRESS) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        res = await this.httpService.getmapGetPreparedDelivery(catalogId);
+      }
+
+      if (res.status === PrepareStatusEnum.ERROR) {
+        const msg = `GetMap server returned error for catalogId: ${catalogId}: ${res.error?.message}`;
+        this.logger.error(msg);
+        throw new DeliveryError(res.error?.errorCode || ErrorCode.DLV_OTHER, msg);
+      }
+
+      this.logger.log(`GetMap fallback success for catalogId: ${catalogId}`);
+      return res;
+    } catch (error) {
+      if (error instanceof DeliveryError) {
+        throw error;
+      }
+      const msg = `GetMap server fallback failed for catalogId: ${catalogId}: ${error.message}`;
+      this.logger.error(msg);
+      throw new DeliveryError(ErrorCode.DLV_NOT_FOUND, msg);
+    }
   }
 
   private async getArtifactsFromRelease(release: ReleaseEntity, dlvCatalogId: string): Promise<DeliveryItemDto[]> {
