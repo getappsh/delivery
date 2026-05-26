@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - backwards-comptablilty
 ##
 jobs:
   calculate_new_tag:
