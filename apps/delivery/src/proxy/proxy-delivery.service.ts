@@ -62,7 +62,6 @@ export class DeliveryService {
   }
 
   async applyOriginMetadata(res: PrepareDeliveryResDto, deviceId: string): Promise<void> {
-    if (res.status !== PrepareStatusEnum.DONE || !res.Artifacts || res.Artifacts.length === 0) return;
 
     try {
       const prepReq = new PrepareDeliveryReqDto();
@@ -71,10 +70,10 @@ export class DeliveryService {
       prepReq.itemType = ItemTypeEnum.CACHE;
 
       const originRes = await this.httpService.apiPrepareDelivery(prepReq);
-      if (originRes.status !== PrepareStatusEnum.DONE || !originRes.Artifacts) return;
+     if (res.status !== PrepareStatusEnum.DONE || !res.artifacts || res.artifacts.length === 0) return;
 
-      for (const cachedArt of res.Artifacts) {
-        const originArt = originRes.Artifacts.find(a => a.itemKey === cachedArt.itemKey);
+      for (const cachedArt of res.artifacts) {
+        const originArt = originRes.artifacts.find(a => a.itemKey === cachedArt.itemKey);
         if (originArt) {
           cachedArt.isExecutable = originArt.isExecutable;
         }

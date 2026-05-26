@@ -27,7 +27,7 @@ export class PrepareDeliveryResDto {
   url: string;
 
   @ApiProperty({ required: false, type: [DeliveryItemDto] })
-  private artifacts: DeliveryItemDto[];
+  artifacts: DeliveryItemDto[];
 
   get Artifacts(): DeliveryItemDto[] {
     return this.artifacts;
