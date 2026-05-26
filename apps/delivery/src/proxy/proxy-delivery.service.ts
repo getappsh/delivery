@@ -61,4 +61,27 @@ export class DeliveryService {
     return PrepareDeliveryResDto.fromPrepareDeliveryResDto(prepRes);
   }
 
+  async applyOriginMetadata(res: PrepareDeliveryResDto, deviceId: string): Promise<void> {
+    if (res.status !== PrepareStatusEnum.DONE || !res.Artifacts || res.Artifacts.length === 0) return;
+
+    try {
+      const prepReq = new PrepareDeliveryReqDto();
+      prepReq.catalogId = res.catalogId;
+      prepReq.deviceId = deviceId;
+      prepReq.itemType = ItemTypeEnum.CACHE;
+
+      const originRes = await this.httpService.apiPrepareDelivery(prepReq);
+      if (originRes.status !== PrepareStatusEnum.DONE || !originRes.Artifacts) return;
+
+      for (const cachedArt of res.Artifacts) {
+        const originArt = originRes.Artifacts.find(a => a.itemKey === cachedArt.itemKey);
+        if (originArt) {
+          cachedArt.isExecutable = originArt.isExecutable;
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to get origin metadata for catalogId ${res.catalogId}: ${err}`);
+    }
+  }
+
 }

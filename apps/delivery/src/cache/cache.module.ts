@@ -12,6 +12,7 @@ import { CacheConfigEntity } from '@app/common/database-proxy/entities/cache-con
 import { ScheduleModule } from '@nestjs/schedule';
 import { SafeCronModule } from '@app/common/safe-cron';
 import { ConfigModule } from '@nestjs/config';
+import { AgentCompatibilityService } from './agent-compatibility.service';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { ConfigModule } from '@nestjs/config';
     ]),
     SafeCronModule
   ],
-  providers: [PrepareService, DownloadService, HttpClientService, S3Service, ManagementService],
-  exports: [PrepareService, ManagementService]
+  providers: [PrepareService, DownloadService, HttpClientService, S3Service, ManagementService, AgentCompatibilityService],
+  exports: [PrepareService, ManagementService, AgentCompatibilityService]
 })
 export class CacheModule { }

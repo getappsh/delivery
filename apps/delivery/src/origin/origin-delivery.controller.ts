@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrepareService } from '../cache/prepare.service';
 import { DeliveryEntity } from '@app/common/database-proxy/entities';
 import { RpcPayload } from '@app/common/microservice-client';
+import { AgentCompatibilityService } from '../cache/agent-compatibility.service';
 
 @Controller()
 export class DeliveryController {
@@ -16,7 +17,8 @@ export class DeliveryController {
   constructor(
     configService: ConfigService,
     private readonly deliveryService: DeliveryService,
-    private readonly prepareService: PrepareService
+    private readonly prepareService: PrepareService,
+    private readonly agentCompatibility: AgentCompatibilityService,
   ) {
     this.useCache = configService.get("USE_CACHE") === "true"
     this.logger.log("Use delivery cache: " + this.useCache)
@@ -26,23 +28,27 @@ export class DeliveryController {
   @MessagePattern(DeliveryTopics.PREPARE_DELIVERY)
   async prepareDelivery(@RpcPayload() preDlv: PrepareDeliveryReqDto) {
     this.logger.log(`Prepare delivery for catalogId: ${preDlv.catalogId}`)
+    let res;
     if (this.useCache) {
-      return this.prepareService.prepareDelivery(preDlv, async (dlv: DeliveryEntity) => {
+      res = await this.prepareService.prepareDelivery(preDlv, async (dlv: DeliveryEntity) => {
         return await this.deliveryService.prepareDeliveryV2(dlv.catalogId)
       });
+    } else {
+      res = await this.deliveryService.prepareDeliveryV2(preDlv.catalogId);
     }
-    const res = await this.deliveryService.prepareDeliveryV2(preDlv.catalogId);
+    await this.agentCompatibility.applyCompatibility(res, preDlv.deviceId);
     return res;
-
   }
 
   @MessagePattern(DeliveryTopics.PREPARED_DELIVERY_STATUS)
   async getPrepareDeliveryStatus(@RpcPayload("stringValue") catalogId: string) {
     this.logger.log(`Get prepared delivery status for catalogId: ${catalogId}`);
+    let res;
     if (this.useCache) {
-      return this.prepareService.getPreparedDeliveryStatus(catalogId, async (dlv: DeliveryEntity) => await this.deliveryService.prepareDeliveryV2(dlv.catalogId));
+      res = await this.prepareService.getPreparedDeliveryStatus(catalogId, async (dlv: DeliveryEntity) => await this.deliveryService.prepareDeliveryV2(dlv.catalogId));
+    } else {
+      res = await this.deliveryService.prepareDeliveryV2(catalogId);
     }
-    const res = await this.deliveryService.prepareDeliveryV2(catalogId);
     return res;
   }
 
