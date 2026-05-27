@@ -28,7 +28,7 @@ export class HttpClientService {
     if (getmapServerUrl) {
       const deviceSecret = configService.get<string>("DEVICE_SECRET");
       this.getmapClient = axios.create({
-        baseURL: getmapServerUrl,
+        baseURL: getmapServerUrl.replace(/\/+$/, ''),
         timeout: 30000,
         headers: deviceSecret ? { "device-auth": deviceSecret } : {},
       });
