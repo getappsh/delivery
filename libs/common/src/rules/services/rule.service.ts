@@ -248,6 +248,28 @@ export class RuleService implements OnModuleInit {
   }
 
   /**
+   * Fetches all POLICY rules associated with ANY of the given catalogIds in a single query.
+   * More efficient than calling findAll() N times when you need policies for many releases.
+   */
+  async findAllForReleases(catalogIds: string[]): Promise<RuleEntity[]> {
+    if (!catalogIds || catalogIds.length === 0) return [];
+    return this.ruleRepository
+      .createQueryBuilder('rule')
+      .leftJoinAndSelect('rule.releaseAssociations', 'releaseAssoc')
+      .leftJoinAndSelect('releaseAssoc.release', 'release')
+      .leftJoinAndSelect('release.project', 'project')
+      .leftJoinAndSelect('rule.deviceTypeAssociations', 'deviceTypeAssoc')
+      .leftJoinAndSelect('deviceTypeAssoc.deviceType', 'deviceType')
+      .leftJoinAndSelect('rule.deviceAssociations', 'deviceAssoc')
+      .leftJoinAndSelect('deviceAssoc.device', 'device')
+      .leftJoinAndSelect('rule.osAssociations', 'osAssoc')
+      .where('rule.type = :type', { type: RuleType.POLICY })
+      .andWhere('release.catalogId IN (:...catalogIds)', { catalogIds })
+      .orderBy('rule.createdAt', 'DESC')
+      .getMany();
+  }
+
+  /**
    * Converts a RuleEntity to RuleDefinition format
    */
   ruleEntityToDefinition(rule: RuleEntity): RuleDefinition {

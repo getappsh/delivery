@@ -34,6 +34,7 @@ export const UploadTopics = {
     // Rules - Policies
     GET_POLICIES: `getapp-upload.get-policies${region}`,
     GET_POLICIES_FOR_RELEASE: `getapp-upload.get-policies-for-release${region}`,
+    GET_POLICIES_FOR_RELEASES: `getapp-upload.get-policies-for-releases${region}`,
     CREATE_POLICY: `getapp-upload.create-policy${region}`,
     GET_POLICY: `getapp-upload.get-policy${region}`,
     GET_POLICY_INTERNAL: `getapp-upload.get-policy-internal${region}`,
@@ -83,6 +84,7 @@ export const OfferingTopics = {
     GET_OFFERING_FOR_PROJECT: `getapp-offering.get-offering-for-project${region}`,
     GET_OFFERING_FOR_ALL_PROJECTS: `getapp-offering.get-offering-for-all-project${region}`,
     GET_OFFERING_FOR_ALL_PLATFORMS: `getapp-offering.get-offering-for-all-platforms${region}`,
+    GET_OFFERING_FOR_ALL_DEVICE_TYPES: `getapp-offering.get-offering-for-all-device-types${region}`,
     GET_OFFER_OF_COMP: `getapp-offering.get-offering-of-comp${region}`,
 
     // Policies
@@ -248,6 +250,9 @@ export const DeviceTopics = {
     GET_DEVICE_RESTRICTIONS: `getapp-device.get-device-restrictions${region}`,
     // OS
     GET_ALL_OS: `getapp-device.get-all-os${region}`,
+    // Device Data
+    GET_DEVICE_DATA: `getapp-device.deviceData.get${region}`,
+    SET_DEVICE_DATA: `getapp-device.deviceData.set${region}`,
 } as const
 
 export const DeviceTopicsEmit = {
