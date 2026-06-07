@@ -1,6 +1,10 @@
 import 'dotenv/config';
 const region = process.env.REGION ? `.${process.env.REGION}` : '';
 
+export const AlertTopicsEmit = {
+    SYSTEM_ALERT: `getapp-alerts.system-alert${region}`,
+} as const
+
 export const UploadTopics = {
     UPLOAD_ARTIFACT: `getapp-upload.artifact${region}`,
     UPLOAD_MANIFEST: `getapp-upload.manifest${region}`,

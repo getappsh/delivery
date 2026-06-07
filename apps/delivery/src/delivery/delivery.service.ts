@@ -7,7 +7,7 @@ import { CacheConfigDto } from '@app/common/dto/delivery/dto/cache-config.dto';
 import { ManagementService } from '../cache/management.service';
 import { DeleteFromCacheDto } from '@app/common/dto/delivery/dto/delete-cache.dto';
 import { MicroserviceClient, MicroserviceName } from '@app/common/microservice-client';
-import { DeviceTopicsEmit } from '@app/common/microservice-client/topics';
+import { AlertTopicsEmit, DeviceTopicsEmit } from '@app/common/microservice-client/topics';
 import { DeviceComponentStateDto } from '@app/common/dto/device/dto/device-software.dto';
 import { DeviceMapStateDto } from '@app/common/dto/device';
 import { ConfigService } from '@nestjs/config';
@@ -54,6 +54,9 @@ export class DeliveryService {
       this.logger.log(`A new device with Id - ${device.ID} has been registered`)
     }
     newStatus.device = device;
+
+    // Emit alerts for delivery lifecycle events
+    this.emitDeliveryAlert(dlvStatus);
 
     const release = await this.releaseRepo.findOneBy({ catalogId: dlvStatus.catalogId });
     if (release) {
@@ -185,7 +188,7 @@ export class DeliveryService {
       });
       this.logger.debug(`Found ${statuses.length} delivery statuses for catalogId: ${catalogId}`);
       return statuses;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error getting delivery statuses for catalogId: ${catalogId}, error: ${error.message}`);
       throw error;
     }
@@ -219,5 +222,36 @@ export class DeliveryService {
     if (!match) return 24;
     const value = parseInt(match[1], 10);
     return match[2] === 'd' ? value * 24 : value;
+  }
+
+  private emitDeliveryAlert(dlvStatus: DeliveryStatusDto): void {
+    if (dlvStatus.deliveryStatus === DeliveryStatusEnum.START) {
+      this.deviceClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
+        type: 'delivery_started',
+        severity: 'info',
+        message: `Device ${dlvStatus.deviceId} started downloading component ${dlvStatus.catalogId}`,
+        deviceId: dlvStatus.deviceId,
+        catalogId: dlvStatus.catalogId,
+        source: 'delivery',
+      });
+    } else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DONE) {
+      this.deviceClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
+        type: 'delivery_completed',
+        severity: 'info',
+        message: `Device ${dlvStatus.deviceId} completed downloading component ${dlvStatus.catalogId}`,
+        deviceId: dlvStatus.deviceId,
+        catalogId: dlvStatus.catalogId,
+        source: 'delivery',
+      });
+    } else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR) {
+      this.deviceClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
+        type: 'delivery_error',
+        severity: 'critical',
+        message: `Device ${dlvStatus.deviceId} encountered an error downloading component ${dlvStatus.catalogId}`,
+        deviceId: dlvStatus.deviceId,
+        catalogId: dlvStatus.catalogId,
+        source: 'delivery',
+      });
+    }
   }
 }
