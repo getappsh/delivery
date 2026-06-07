@@ -86,6 +86,7 @@ export const DeliveryTopics = {
     SET_CACHE_CONFIG: `getapp-delivery.set-cache-config${region}`,
     CHECK_HEALTH: `getapp-delivery.check-health${region}`,
     GET_DELIVERY_STATUSES: `getapp-delivery.get-delivery-statuses${region}`,
+    GET_THROUGHPUT_METRICS: `getapp-delivery.get-throughput-metrics${region}`,
 } as const
 
 export const DeliveryTopicsEmit = {

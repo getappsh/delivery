@@ -190,4 +190,34 @@ export class DeliveryService {
       throw error;
     }
   }
+
+  async getThroughputMetrics(range: string): Promise<{ dataPoints: Array<{ timestamp: string; mbPerMin: number }> }> {
+    this.logger.log(`Getting throughput metrics for range: ${range}`);
+    const hours = this.parseRangeToHours(range);
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+
+    const result = await this.deliveryStatusRepo
+      .createQueryBuilder('ds')
+      .select(`date_trunc('minute', ds.download_done)`, 'bucket')
+      .addSelect('COALESCE(SUM(ds.bit_number) / 1048576.0, 0)', 'mbPerMin')
+      .where('ds.download_done >= :since', { since })
+      .andWhere('ds.delivery_status = :status', { status: DeliveryStatusEnum.DONE })
+      .groupBy(`date_trunc('minute', ds.download_done)`)
+      .orderBy('bucket', 'ASC')
+      .getRawMany();
+
+    return {
+      dataPoints: result.map(row => ({
+        timestamp: row.bucket,
+        mbPerMin: parseFloat(row.mbPerMin) || 0,
+      })),
+    };
+  }
+
+  private parseRangeToHours(range: string): number {
+    const match = range.match(/^(\d+)(h|d)$/);
+    if (!match) return 24;
+    const value = parseInt(match[1], 10);
+    return match[2] === 'd' ? value * 24 : value;
+  }
 }

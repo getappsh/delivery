@@ -75,6 +75,17 @@ export class DeliveryController {
     }
   }
 
+  @MessagePattern(DeliveryTopics.GET_THROUGHPUT_METRICS)
+  async getThroughputMetrics(@RpcPayload() data: any) {
+    this.logger.log(`Get throughput metrics for range: ${data.range}`);
+    try {
+      return await this.deliveryService.getThroughputMetrics(data.range);
+    } catch (error) {
+      this.logger.error(`Error getting throughput metrics: ${error.message}`);
+      return { dataPoints: [] };
+    }
+  }
+
   private readImageVersion() {
     let version = 'unknown'
     try {
