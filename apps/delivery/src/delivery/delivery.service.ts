@@ -12,6 +12,7 @@ import { DeviceComponentStateDto } from '@app/common/dto/device/dto/device-softw
 import { DeviceMapStateDto } from '@app/common/dto/device';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
+import { DeviceDto } from '@app/common/dto/device/dto/device.dto';
 
 @Injectable()
 export class DeliveryService {
@@ -30,6 +31,7 @@ export class DeliveryService {
     @InjectRepository(MapEntity) private readonly mapRepo: Repository<MapEntity>,
     @Inject(MicroserviceName.DISCOVERY_SERVICE) private readonly deviceClient: MicroserviceClient,
     @Inject(MicroserviceName.PROJECT_MANAGEMENT_SERVICE) private readonly projectManagementClient: MicroserviceClient,
+    @Inject(MicroserviceName.API_SERVICE) private readonly apiClient: MicroserviceClient,
     configService: ConfigService,
   ) {
     const getmapServerUrl = configService.get<string>("GETMAP_SERVER_URL");
@@ -59,8 +61,9 @@ export class DeliveryService {
     // Emit alerts for delivery lifecycle events
     this.emitDeliveryAlert(dlvStatus);
 
-    const release = await this.releaseRepo.findOneBy({ catalogId: dlvStatus.catalogId });
+    const release = await this.releaseRepo.findOne({ where: { catalogId: dlvStatus.catalogId }, relations: ['project'] });
     if (release) {
+      this.emitDeviceStatusUpdate(dlvStatus, device, release.project?.id);
       const isSaved =  await this.upsertDownloadStatus(newStatus);
       this.logger.debug(`Is saved: ${isSaved}`);
       if (isSaved){
@@ -90,6 +93,7 @@ export class DeliveryService {
 
     const map = await this.mapRepo.findOneBy({ catalogId: dlvStatus.catalogId })
     if (map) {
+      this.emitDeviceStatusUpdate(dlvStatus, device);
       const isSaved = await this.upsertDownloadStatus(newStatus)
 
       if (isSaved) {
@@ -254,5 +258,21 @@ export class DeliveryService {
         source: 'delivery',
       });
     }
+  }
+
+  private emitDeviceStatusUpdate(dlvStatus: DeliveryStatusDto, device: DeviceEntity, projectId?: string | number): void {
+    this.apiClient.emit(AlertTopicsEmit.DEVICE_STATUS_UPDATE, {
+      type: 'device_status_update',
+      deviceId: dlvStatus.deviceId,
+      projectId: projectId?.toString(),
+      releaseId: dlvStatus.catalogId,
+      statusType: 'delivery',
+      status: dlvStatus.deliveryStatus,
+      timestamp: new Date().toISOString(),
+      message: `Delivery ${dlvStatus.deliveryStatus} for component ${dlvStatus.catalogId}`,
+      error: dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR ? `Delivery error on device ${dlvStatus.deviceId}` : undefined,
+      progress: dlvStatus.downloadData,
+      metadata: DeviceDto.fromDeviceEntity(device),
+    });
   }
 }

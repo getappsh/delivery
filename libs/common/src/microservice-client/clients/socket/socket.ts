@@ -22,6 +22,8 @@ export function getSocketClientConfig(type: MicroserviceType): ClientProvider {
       return socketDiscoveryConfig()
     case MicroserviceType.SBOM_GENERATOR:
       return socketSbomGeneratorConfig()
+    case MicroserviceType.API:
+      return socketApiConfig()
   }
 }
 
@@ -107,6 +109,16 @@ const socketSbomGeneratorConfig = (): ClientProvider => {
     options: {
       host: process.env.SBOM_GENERATOR_HOST ?? "localhost",
       port: Number(process.env.SBOM_GENERATOR_PORT ?? 3009)
+    }
+  }
+}
+
+const socketApiConfig = (): ClientProvider => {
+  return {
+    transport: Transport.TCP,
+    options: {
+      host: process.env.API_MS_HOST ?? "localhost",
+      port: Number(process.env.API_MS_PORT ?? 3010)
     }
   }
 }

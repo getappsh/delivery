@@ -8,6 +8,7 @@ export enum MicroserviceType {
   GET_MAP,
   DEVICE,
   SBOM_GENERATOR,
+  API,
 }
 
 export const MicroserviceName = {
@@ -20,6 +21,7 @@ export const MicroserviceName = {
   GET_MAP_SERVICE: "GET_MAP_SERVICE",
   DEVICE_SERVICE: "DEVICE_SERVICE",
   SBOM_GENERATOR_SERVICE: "SBOM_GENERATOR_SERVICE",
+  API_SERVICE: "API_SERVICE",
 }
 
 export interface MicroserviceModuleOptions {

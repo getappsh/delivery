@@ -3,6 +3,7 @@ const region = process.env.REGION ? `.${process.env.REGION}` : '';
 
 export const AlertTopicsEmit = {
     SYSTEM_ALERT: `getapp-alerts.system-alert${region}`,
+    DEVICE_STATUS_UPDATE: `getapp-alerts.device-status-update${region}`,
 } as const
 
 export const UploadTopics = {
