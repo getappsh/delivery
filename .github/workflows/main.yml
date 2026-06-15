@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - even-3
 ##
 jobs:
   calculate_new_tag:
