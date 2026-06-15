@@ -1,6 +1,6 @@
 # Dockerfile to build the getapp application
 # to fit the prod environmet in the cts
-
+#
 ############################################################
 ###               ///    CTS part     ///                ###
 ############################################################
