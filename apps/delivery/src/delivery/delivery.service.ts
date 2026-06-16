@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DeliveryStatusEntity, DeviceEntity, MapEntity, DeviceMapStateEnum, DeviceComponentStateEnum, DeliveryStatusEnum, ReleaseEntity } from '@app/common/database/entities';
+import { DeliveryStatusEntity, DeviceEntity, MapEntity, DeviceMapStateEnum, DeviceComponentStateEnum, DeliveryStatusEnum, DeliveryStateEnum, ReleaseEntity } from '@app/common/database/entities';
 import { DeliveryStatusDto } from '@app/common/dto/delivery';
 import { CacheConfigDto } from '@app/common/dto/delivery/dto/cache-config.dto';
 import { ManagementService } from '../cache/management.service';
@@ -45,6 +45,7 @@ export class DeliveryService {
   async updateDownloadStatus(dlvStatus: DeliveryStatusDto) {
     const newStatus = this.deliveryStatusRepo.create(dlvStatus);
     newStatus.progress = dlvStatus.downloadData
+    newStatus.state = dlvStatus.state;
 
     let device = await this.deviceRepo.findOne({ where: { ID: dlvStatus.deviceId } })
     if (!device) {
@@ -57,28 +58,30 @@ export class DeliveryService {
 
     const release = await this.releaseRepo.findOneBy({ catalogId: dlvStatus.catalogId });
     if (release) {
-      const isSaved =  await this.upsertDownloadStatus(newStatus);
+      const isSaved = await this.upsertDownloadStatus(newStatus);
       this.logger.debug(`Is saved: ${isSaved}`);
-      if (isSaved){
+      if (isSaved) {
         this.logger.log("Send device software state");
 
         let deviceState = new DeviceComponentStateDto();
         deviceState.catalogId = dlvStatus.catalogId;
         deviceState.deviceId = dlvStatus.deviceId;
         deviceState.downloadedAt = dlvStatus.downloadDone ?? dlvStatus.downloadStart
-        
-        if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DELETED){
+
+        if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DELETED) {
           deviceState.state = DeviceComponentStateEnum.DELETED;
-        }else if(dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR){
+        } else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR) {
           deviceState.state = DeviceComponentStateEnum.DELIVERY;
           deviceState.error = "Error"
-        }else if(dlvStatus.deliveryStatus === DeliveryStatusEnum.DONE){
+        } else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DONE
+          && (!dlvStatus.state || dlvStatus.state === DeliveryStateEnum.DONE)) {
+          // Only mark as DOWNLOADED when the entire delivery is complete (state == Done or absent for backward compat)
           deviceState.state = DeviceComponentStateEnum.DOWNLOADED;
-        }else {
+        } else {
           deviceState.state = DeviceComponentStateEnum.DELIVERY;
         }
-        
-       
+
+
         this.deviceClient.emit(DeviceTopicsEmit.UPDATE_DEVICE_SOFTWARE_STATE, deviceState);
       }
       return isSaved;
@@ -96,15 +99,15 @@ export class DeliveryService {
         deviceState.deviceId = dlvStatus.deviceId;
         deviceState.downloadedAt = dlvStatus.downloadDone ?? dlvStatus.downloadStart
 
-       if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DELETED){
-          deviceState.state  = DeviceMapStateEnum.DELETED;
-        }else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR){
-          deviceState.state  = DeviceMapStateEnum.DELIVERY;
+        if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DELETED) {
+          deviceState.state = DeviceMapStateEnum.DELETED;
+        } else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR) {
+          deviceState.state = DeviceMapStateEnum.DELIVERY;
           deviceState.error = "Error"
         } else {
-          deviceState.state  = DeviceMapStateEnum.DELIVERY;
+          deviceState.state = DeviceMapStateEnum.DELIVERY;
         }
-      
+
         this.deviceClient.emit(DeviceTopicsEmit.UPDATE_DEVICE_MAP_STATE, deviceState);
       }
       return isSaved
@@ -185,7 +188,7 @@ export class DeliveryService {
       });
       this.logger.debug(`Found ${statuses.length} delivery statuses for catalogId: ${catalogId}`);
       return statuses;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error getting delivery statuses for catalogId: ${catalogId}, error: ${error.message}`);
       throw error;
     }
