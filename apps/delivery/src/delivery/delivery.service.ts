@@ -30,6 +30,7 @@ export class DeliveryService {
     @InjectRepository(MapEntity) private readonly mapRepo: Repository<MapEntity>,
     @Inject(MicroserviceName.DISCOVERY_SERVICE) private readonly deviceClient: MicroserviceClient,
     @Inject(MicroserviceName.PROJECT_MANAGEMENT_SERVICE) private readonly projectManagementClient: MicroserviceClient,
+    @Inject(MicroserviceName.DEPLOY_SERVICE) private readonly deployClient: MicroserviceClient,
     configService: ConfigService,
   ) {
     const getmapServerUrl = configService.get<string>("GETMAP_SERVER_URL");
@@ -227,7 +228,7 @@ export class DeliveryService {
 
   private emitDeliveryAlert(dlvStatus: DeliveryStatusDto): void {
     if (dlvStatus.deliveryStatus === DeliveryStatusEnum.START) {
-      this.projectManagementClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
+      this.deployClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
         type: 'delivery_started',
         severity: 'info',
         message: `Device ${dlvStatus.deviceId} started downloading component ${dlvStatus.catalogId}`,
@@ -236,7 +237,7 @@ export class DeliveryService {
         source: 'delivery',
       });
     } else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DONE) {
-      this.projectManagementClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
+      this.deployClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
         type: 'delivery_completed',
         severity: 'info',
         message: `Device ${dlvStatus.deviceId} completed downloading component ${dlvStatus.catalogId}`,
@@ -245,7 +246,7 @@ export class DeliveryService {
         source: 'delivery',
       });
     } else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR) {
-      this.projectManagementClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
+      this.deployClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
         type: 'delivery_error',
         severity: 'critical',
         message: `Device ${dlvStatus.deviceId} encountered an error downloading component ${dlvStatus.catalogId}`,
