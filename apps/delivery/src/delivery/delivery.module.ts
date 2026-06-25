@@ -29,6 +29,10 @@ import { MicroserviceModule, MicroserviceName, MicroserviceType } from '@app/com
       name: MicroserviceName.API_SERVICE,
       type: MicroserviceType.API,
     }),
+    MicroserviceModule.register({
+      name: MicroserviceName.DEPLOY_SERVICE,
+      type: MicroserviceType.DEPLOY,
+    }),
     DatabaseModule,
     TypeOrmModule.forFeature([
       ReleaseEntity,
