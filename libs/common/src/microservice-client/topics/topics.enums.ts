@@ -1,6 +1,10 @@
 import 'dotenv/config';
 const region = process.env.REGION ? `.${process.env.REGION}` : '';
 
+export const AlertTopicsEmit = {
+    SYSTEM_ALERT: `getapp-alerts.system-alert${region}`,
+} as const
+
 export const UploadTopics = {
     UPLOAD_ARTIFACT: `getapp-upload.artifact${region}`,
     UPLOAD_MANIFEST: `getapp-upload.manifest${region}`,
@@ -86,6 +90,7 @@ export const DeliveryTopics = {
     SET_CACHE_CONFIG: `getapp-delivery.set-cache-config${region}`,
     CHECK_HEALTH: `getapp-delivery.check-health${region}`,
     GET_DELIVERY_STATUSES: `getapp-delivery.get-delivery-statuses${region}`,
+    GET_THROUGHPUT_METRICS: `getapp-delivery.get-throughput-metrics${region}`,
 } as const
 
 export const DeliveryTopicsEmit = {

@@ -7,7 +7,7 @@ import { CacheConfigDto } from '@app/common/dto/delivery/dto/cache-config.dto';
 import { ManagementService } from '../cache/management.service';
 import { DeleteFromCacheDto } from '@app/common/dto/delivery/dto/delete-cache.dto';
 import { MicroserviceClient, MicroserviceName } from '@app/common/microservice-client';
-import { DeviceTopicsEmit } from '@app/common/microservice-client/topics';
+import { AlertTopicsEmit, DeviceTopicsEmit } from '@app/common/microservice-client/topics';
 import { DeviceComponentStateDto } from '@app/common/dto/device/dto/device-software.dto';
 import { DeviceMapStateDto } from '@app/common/dto/device';
 import { ConfigService } from '@nestjs/config';
@@ -29,6 +29,8 @@ export class DeliveryService {
     @InjectRepository(DeviceEntity) private readonly deviceRepo: Repository<DeviceEntity>,
     @InjectRepository(MapEntity) private readonly mapRepo: Repository<MapEntity>,
     @Inject(MicroserviceName.DISCOVERY_SERVICE) private readonly deviceClient: MicroserviceClient,
+    @Inject(MicroserviceName.PROJECT_MANAGEMENT_SERVICE) private readonly projectManagementClient: MicroserviceClient,
+    @Inject(MicroserviceName.DEPLOY_SERVICE) private readonly deployClient: MicroserviceClient,
     configService: ConfigService,
   ) {
     const getmapServerUrl = configService.get<string>("GETMAP_SERVER_URL");
@@ -55,6 +57,9 @@ export class DeliveryService {
       this.logger.log(`A new device with Id - ${device.ID} has been registered`)
     }
     newStatus.device = device;
+
+    // Emit alerts for delivery lifecycle events
+    this.emitDeliveryAlert(dlvStatus);
 
     const release = await this.releaseRepo.findOneBy({ catalogId: dlvStatus.catalogId });
     if (release) {
@@ -191,6 +196,67 @@ export class DeliveryService {
     } catch (error: any) {
       this.logger.error(`Error getting delivery statuses for catalogId: ${catalogId}, error: ${error.message}`);
       throw error;
+    }
+  }
+
+  async getThroughputMetrics(range: string): Promise<{ dataPoints: Array<{ timestamp: string; mbPerMin: number }> }> {
+    this.logger.log(`Getting throughput metrics for range: ${range}`);
+    const hours = this.parseRangeToHours(range);
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+
+    const result = await this.deliveryStatusRepo
+      .createQueryBuilder('ds')
+      .select(`date_trunc('minute', ds.download_done)`, 'bucket')
+      .addSelect('COALESCE(SUM(ds.bit_number) / 1048576.0, 0)', 'mbPerMin')
+      .where('ds.download_done >= :since', { since })
+      .andWhere('ds.delivery_status = :status', { status: DeliveryStatusEnum.DONE })
+      .groupBy(`date_trunc('minute', ds.download_done)`)
+      .orderBy('bucket', 'ASC')
+      .getRawMany();
+
+    return {
+      dataPoints: result.map(row => ({
+        timestamp: row.bucket,
+        mbPerMin: parseFloat(row.mbPerMin) || 0,
+      })),
+    };
+  }
+
+  private parseRangeToHours(range: string): number {
+    const match = range.match(/^(\d+)(h|d)$/);
+    if (!match) return 24;
+    const value = parseInt(match[1], 10);
+    return match[2] === 'd' ? value * 24 : value;
+  }
+
+  private emitDeliveryAlert(dlvStatus: DeliveryStatusDto): void {
+    if (dlvStatus.deliveryStatus === DeliveryStatusEnum.START) {
+      this.deployClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
+        type: 'delivery_started',
+        severity: 'info',
+        message: `Device ${dlvStatus.deviceId} started downloading component ${dlvStatus.catalogId}`,
+        deviceId: dlvStatus.deviceId,
+        catalogId: dlvStatus.catalogId,
+        source: 'delivery',
+      });
+    } else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.DONE) {
+      this.deployClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
+        type: 'delivery_completed',
+        severity: 'info',
+        message: `Device ${dlvStatus.deviceId} completed downloading component ${dlvStatus.catalogId}`,
+        deviceId: dlvStatus.deviceId,
+        catalogId: dlvStatus.catalogId,
+        source: 'delivery',
+      });
+    } else if (dlvStatus.deliveryStatus === DeliveryStatusEnum.ERROR) {
+      this.deployClient.emit(AlertTopicsEmit.SYSTEM_ALERT, {
+        type: 'delivery_error',
+        severity: 'critical',
+        message: `Device ${dlvStatus.deviceId} encountered an error downloading component ${dlvStatus.catalogId}`,
+        deviceId: dlvStatus.deviceId,
+        catalogId: dlvStatus.catalogId,
+        source: 'delivery',
+      });
     }
   }
 }

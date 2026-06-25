@@ -21,6 +21,14 @@ import { MicroserviceModule, MicroserviceName, MicroserviceType } from '@app/com
       name: MicroserviceName.DISCOVERY_SERVICE,
       type: MicroserviceType.DISCOVERY,
     }),
+    MicroserviceModule.register({
+      name: MicroserviceName.PROJECT_MANAGEMENT_SERVICE,
+      type: MicroserviceType.PROJECT_MANAGEMENT,
+    }),
+    MicroserviceModule.register({
+      name: MicroserviceName.DEPLOY_SERVICE,
+      type: MicroserviceType.DEPLOY,
+    }),
     DatabaseModule,
     TypeOrmModule.forFeature([
       ReleaseEntity,
