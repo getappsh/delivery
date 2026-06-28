@@ -63,6 +63,7 @@ export const UploadTopics = {
     CONFIG_ADD_MAP_ASSOCIATION: `getapp-upload.config.add-map-association${region}`,
     CONFIG_REMOVE_MAP_ASSOCIATION: `getapp-upload.config.remove-map-association${region}`,
     CONFIG_GET_MAP_ASSOCIATIONS: `getapp-upload.config.get-map-associations${region}`,
+    CONFIG_GET_MAP_AFFECTED_DEVICES: `getapp-upload.config.get-map-affected-devices${region}`,
     CONFIG_GET_CONFIG_MAPS_FOR_PROJECT: `getapp-upload.config.get-config-maps-for-project${region}`,
     CONFIG_GET_DEVICE_CONFIG: `getapp-upload.config.get-device-config${region}`,
     CONFIG_GET_DEVICE_CONFIG_BY_VERSION: `getapp-upload.config.get-device-config-by-version${region}`,
@@ -112,8 +113,10 @@ export const OfferingTopics = {
     GET_OFFERING_TREE_POLICIES: `getapp-offering.get-offering-tree-policies${region}`,
     GET_PUSH_OFFERING_DEVICES: `getapp-offering.get-push-offering-devices${region}`,
     GET_CONFIG_OFFERING_FOR_DEVICE: `getapp-offering.get-config-offering-for-device${region}`,
+    GET_CONFIG_RELEASES_FOR_DEVICES: `getapp-offering.get-config-releases-for-devices${region}`,
     CONFIG_OFFERING_PUSH: `getapp-offering.config-offering-push${region}`,
     CONFIG_OFFERING_UNPUSH: `getapp-offering.config-offering-unpush${region}`,
+    GET_BATCH_PUSH_OFFERINGS_FOR_DEVICES: `getapp-offering.get-batch-push-offerings-for-devices${region}`,
     
 } as const
 
