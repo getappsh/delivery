@@ -31,7 +31,6 @@ export class DeliveryStatusEntity extends BaseEntity {
   @Column({ name: 'state', type: 'enum', enum: DeliveryStateEnum, nullable: true })
   state: DeliveryStateEnum;
 
-
   @Column({
     name: 'type',
     type: "enum",

@@ -102,6 +102,20 @@ export class ReleaseOfferingDto {
   @IsOptional()
   dependedOnBy?: string[];
 
+  @ApiProperty({ 
+    type: [String], 
+    description: "Array of managed device IDs that this release is pushed to",
+    required: false 
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  pushTo?: string[];
+
+  @ApiProperty({ description: "Indicates whether this release is available for delivery (true when release status is not error)", default: true })
+  @IsBoolean()
+  available: boolean;
+
   toString() {
     return JSON.stringify(this);
   }
@@ -187,4 +201,16 @@ export class ComponentOfferingRequestDto {
     dto.platforms = dis?.platform ? [dis.platform.token] : []
     return dto
   }
+}
+
+export class BatchPushOfferingRequestDto {
+  /** Array of device IDs to query push offerings for */
+  deviceIds: string[];
+  /** Map of deviceId -> installed catalogIds; used to exclude already-installed releases from the result. Omit to skip filtering. */
+  installedComponents?: Record<string, string[]>;
+}
+
+export class BatchPushOfferingResponseDto {
+  /** Map of deviceId -> push releases for that device */
+  pushByDevice: Record<string, ComponentV2Dto[]>;
 }
